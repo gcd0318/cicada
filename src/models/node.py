@@ -2,6 +2,7 @@ from config import DEF_PATHS
 from const import NA, READY
 from model import db, logger
 
+import datetime
 import os
 
 class Node(db.Model):
@@ -11,9 +12,19 @@ class Node(db.Model):
     hostname = db.Column(db.String(64), default='', nullable=True)
     ip = db.Column(db.String(16), default='127.0.0.1', nullable=False, unique=True)
     port = db.Column(db.Integer, nullable=False, default=22)
-    username = db.Column(db.String(64), default='', nullable=True)
+    username = db.Column(db.String(64), default='cicada', nullable=True)
     password = db.Column(db.String(1024), default='', nullable=True)
     status = db.Column(db.Integer, default=NA)
+    last_updated = db.Column(db.TIMESTAMP, nullable=False, onupdate=datetime.datetime.now,
+                             default=datetime.datetime.now)
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'hostname': self.hostname or self.ip,
+            'ip': self.ip,
+            'sattus': self.status
+        }
 
     def init(self):
         access_ok = {}
@@ -33,3 +44,9 @@ class Node(db.Model):
         else:
             resl.append(root)
         return resl
+
+    def get_free_space(self):
+
+
+if ('__main__' == __name__):
+    print(Node.to_json())
