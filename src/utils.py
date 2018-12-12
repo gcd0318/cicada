@@ -31,5 +31,13 @@ def get_disk_usage(path='/'):
     used = (st.f_blocks - st.f_bfree) * st.f_frsize
     return total, used, free
 
+def get_path_size(path):
+    import math
+
+    size = 0
+    for root, dirs, files in os.walk(path):
+        size = size + sum([math.ceil(os.path.getsize(os.path.join(root, name)) / 1024) * 1024 for name in files])
+    return size
+
 if ('__main__' == __name__):
-    print(get_disk_usage(''))
+    print(get_path_size('./'))

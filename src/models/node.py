@@ -1,6 +1,7 @@
 from config import DEF_PATHS
-from const import NA, READY
+from const import NA, READY, FULL
 from model import db, logger
+from utils import get_disk_usage
 
 import datetime
 import os
@@ -23,7 +24,8 @@ class Node(db.Model):
             'id': self.id,
             'hostname': self.hostname or self.ip,
             'ip': self.ip,
-            'sattus': self.status
+            'status': self.status,
+            'disk_space': self.get_free_space()
         }
 
     def init(self):
@@ -46,7 +48,11 @@ class Node(db.Model):
         return resl
 
     def get_free_space(self):
-
+        total, used, free = get_disk_usage('/mnt/sda1')
+        if (1024 * 1024 >= free):
+            self.status = FULL
+            db.session.commit()
+        return free
 
 if ('__main__' == __name__):
     print(Node.to_json())
