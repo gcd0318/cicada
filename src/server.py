@@ -1,20 +1,41 @@
 from config import PORT
-from model import app, db, logger
+from const import NodeStatus
+from model import app, db
 from models.node import Node
-from utils import get_local_ip
+from utils import get_local_ip, get_local_hostname
 
-from flask import render_template, redirect, url_for, request, jsonify
+from flask import jsonify
 
-@app.route("/", methods=['GET', 'POST'])
-def home():
-    nodes = Node.query.all
-    nodelist = []
+
+@app.route("/status", methods=['GET', 'POST'])
+def status():
+    local_ip = get_local_ip()
+    node = Node.query.filter_by(ip=local_ip).first()
+    return jsonify(node.to_json())
+
+
+@app.route("/nodes", methods=['GET', 'POST'])
+def nodes():
+    nodes = Node.query.all()
+    node_dict = {}
     for node in nodes:
-        nodelist.append(node.to_json())
-    return jsonify({'nodes': nodelist})
+        node_dict[node.id] = node.to_json()
+    return jsonify(node_dict)
 
 
-if ('__main__' ==  __name__):
+@app.route("/node/<int:node_id>", methods=['GET', 'POST'])
+def show_node(node_id):
+    node_json = {}
+    nodes = Node.query.filter_by(id=node_id)
+    if (1 == nodes.count()):
+        node_json = nodes.first().to_json()
+    return jsonify(node_json)
+
+
+if ('__main__' == __name__):
+    for node in Node.query.all():
+        node.status = NodeStatus.NA
+        db.session.commit()
     local_ip = get_local_ip()
     nodes = Node.query.filter_by(ip=local_ip)
     node = None
@@ -22,5 +43,7 @@ if ('__main__' ==  __name__):
         node = nodes.first()
     else:
         node = Node(ip=local_ip, hostname=get_local_hostname() or '')
-        db.commit()
+        db.session.add(node)
+    node.init()
+    db.session.commit()
     app.run(debug=True, use_reloader=False, host='0.0.0.0', port=PORT)

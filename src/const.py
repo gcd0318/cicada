@@ -1,4 +1,5 @@
-NA = -1
-READY = 0
-BUSY = 1
-FULL = 2
+class NodeStatus():
+    NA = -1
+    READY = 0
+    BUSY = 1
+    FULL = 2
