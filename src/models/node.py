@@ -14,7 +14,6 @@ class Node(db.Model):
     port = db.Column(db.Integer, nullable=False, default=22)
     username = db.Column(db.String(64), default='cicada', nullable=True)
     password = db.Column(db.String(1024), default='', nullable=True)
-    status = db.Column(db.Integer, default=NodeStatus.NA)
     last_updated = db.Column(db.TIMESTAMP, nullable=False, onupdate=datetime.datetime.now,
                              default=datetime.datetime.now)
     manager = NodeManager()
@@ -23,7 +22,7 @@ class Node(db.Model):
         return {
             'hostname': self.hostname or self.ip,
             'ip': self.ip,
-            'status': self.status,
+            'status': self.manager.get_status(),
             'free_space': self.manager.get_free_space()
         }
 
@@ -31,12 +30,11 @@ class Node(db.Model):
         return str(self.to_json())
 
     def init(self):
-        accessibles, free = self.manager.init()
-        if False in accessibles.values():
-            self.status = NodeStatus.NA
-        if (MIN_FREE_SPACE < free):
-            self.status = NodeStatus.READY
-        elif (MIN_FREE_SPACE >= free):
-            self.status = NodeStatus.FULL
-        db.session.commit()
-        return accessibles, free
+        status = NodeStatus.NA
+        if not(False in self.manager.get_accesses().values()):
+            free = self.manager.get_free_space()
+            if (MIN_FREE_SPACE < free):
+                status = NodeStatus.READY
+            elif (MIN_FREE_SPACE >= free):
+                status = NodeStatus.FULL
+            self.manager.set_status(status)
