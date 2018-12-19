@@ -1,7 +1,7 @@
 from config import MIN_FREE_SPACE
 from const import NodeStatus
 from model import db, logger
-from models.nodemanager import NodeManager
+from models.node_manager import NodeManager
 
 import datetime
 
