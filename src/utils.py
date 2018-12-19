@@ -32,12 +32,16 @@ def get_disk_usage(path='/'):
     return total, used, free
 
 def get_path_size(path):
+# todo: why 1024?
     import math
 
     size = 0
-    for root, dirs, files in os.walk(path):
-        size = size + sum([math.ceil(os.path.getsize(os.path.join(root, name)) / 1024) * 1024 for name in files])
+    if(os.path.isdir(path)):
+        for root, dirs, files in os.walk(path):
+            size = size + sum([math.ceil(os.path.getsize(os.path.join(root, name)) / 1024) * 1024 for name in files])
+    elif(os.path.isfile(path)):
+        size = math.ceil(os.path.getsize(path) / 1024) * 1024
     return size
 
 if ('__main__' == __name__):
-    print(get_path_size('./'))
+    print(get_path_size('./'), get_path_size('./cicada.log'))

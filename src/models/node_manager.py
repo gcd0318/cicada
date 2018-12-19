@@ -1,10 +1,10 @@
 from cluster import CLUSTER
-from config import MIN_FREE_SPACE
 from config import DEF_PATHS, TIMEOUT, PORT
-from utils import get_disk_usage, get_local_ip
+from utils import get_disk_usage, get_local_ip, get_path_size
 
 from rediscluster import StrictRedisCluster
 
+import glob
 import json
 import os
 import requests
@@ -90,3 +90,11 @@ class NodeManager():
 
     def get_status(self):
         return self.read_from_db('status')
+
+    def refresh_incoming(self):
+        paths = {}
+        for p in glob.glob(DEF_PATHS['INCOMING'] + '*'):
+            if os.path.isdir(p):
+                p = p + os.sep
+            paths[p] = get_path_size(p)
+        return paths

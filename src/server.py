@@ -5,7 +5,7 @@ from models.node import Node
 from utils import get_local_ip, get_local_hostname
 
 from flask import jsonify
-
+from threading import Thread
 
 @app.route("/status", methods=['GET', 'POST'])
 def status():
@@ -44,6 +44,14 @@ if ('__main__' == __name__):
     else:
         node = Node(ip=local_ip, hostname=get_local_hostname() or '')
         db.session.add(node)
-    node.init()
+    node.refresh()
     db.session.commit()
+
+    tasks = []
+    t_refresh = Thread(target=node.refresh)
+    tasks.append(t_refresh)
+
+    for task in tasks:
+        task.start()
+
     app.run(debug=True, use_reloader=False, host='0.0.0.0', port=PORT)
