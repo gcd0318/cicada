@@ -1,4 +1,4 @@
-from config import PORT
+from config import HTTP_PORT
 from const import NodeStatus
 from model import app, db
 from models.node import Node
@@ -54,4 +54,4 @@ if ('__main__' == __name__):
     for task in tasks:
         task.start()
 
-    app.run(debug=True, use_reloader=False, host='0.0.0.0', port=PORT)
+    app.run(debug=True, use_reloader=False, host='0.0.0.0', port=HTTP_PORT)
