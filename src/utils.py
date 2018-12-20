@@ -43,5 +43,8 @@ def get_path_size(path):
         size = math.ceil(os.path.getsize(path) / 1024) * 1024
     return size
 
+#def copy(src, tgt):
+
+
 if ('__main__' == __name__):
     print(get_path_size('./'), get_path_size('./cicada.log'))

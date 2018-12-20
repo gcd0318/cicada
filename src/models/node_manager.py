@@ -1,5 +1,4 @@
-from cluster import CLUSTER
-from config import DEF_PATHS, TIMEOUT, PORT
+from config import CLUSTER, DEF_PATHS, TIMEOUT, HTTP_PORT
 from utils import get_disk_usage, get_local_ip, get_path_size
 
 from rediscluster import StrictRedisCluster
@@ -14,6 +13,30 @@ class NodeDAO(StrictRedisCluster):
     def __init__(self, host='127.0.0.1', port='7001'):
         startup_nodes = [{"host": host, "port": port}]
         StrictRedisCluster.__init__(self, startup_nodes=startup_nodes, decode_responses=True)
+
+    def insert_or_update(self, name, val):
+        self.set(name, val)
+    def get(self, name):
+        return self.get(name)
+
+    def insert_or_update_dict(self, name, dic):
+        if self.exists(name):
+            for k in dic:
+                self.hset(name, k, dic[k])
+        else:
+            self.hmset(name, dic)
+        res = True
+        for k in dic:
+            res = res and self.hget(name, k) == dic[k]
+        return res
+
+    def insert_or_update_set(self, name, *vals):
+        self.sadd(name, *vals)
+        res = True
+        s_tmp = self.smembers(name)
+        for val in vals:
+            res = res and (val in s_tmp)
+        return res
 
 
 class NodeManager():
@@ -92,9 +115,9 @@ class NodeManager():
         return self.read_from_db('status')
 
     def refresh_incoming(self):
-        paths = {}
+        path_d = {}
         for p in glob.glob(DEF_PATHS['INCOMING'] + '*'):
             if os.path.isdir(p):
                 p = p + os.sep
-            paths[p] = get_path_size(p)
-        return paths
+            path_d[p] = get_path_size(p)
+        return path_d
