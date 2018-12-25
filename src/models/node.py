@@ -36,7 +36,9 @@ class Node(db.Model):
         self.manager.set_accesses()
         status = NodeStatus.NA
         try:
-            if not(False in self.manager.get_accesses().values()):
+            if False in self.manager.get_accesses().values():
+                status = NodeStatus.NA
+            else:
                 free = self.manager.get_free_space()
                 if (MIN_FREE_SPACE < free):
                     status = NodeStatus.READY
