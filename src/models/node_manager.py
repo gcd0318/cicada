@@ -1,15 +1,12 @@
 from config import CLUSTER, DEF_PATHS, TIMEOUT, HTTP_PORT
-from utils import get_disk_usage, get_local_ip, get_path_size
-
+from utils import get_disk_usage, get_local_ip, get_path_size, scan, refresh_incoming
 from rediscluster import StrictRedisCluster
 
-import glob
 import json
 import os
 import requests
 
-
-class NodeDAO(StrictRedisCluster):
+class NodeRedis(StrictRedisCluster):
     def __init__(self, host='127.0.0.1', port='7001'):
         startup_nodes = [{"host": host, "port": port}]
         StrictRedisCluster.__init__(self, startup_nodes=startup_nodes, decode_responses=True)
@@ -42,7 +39,7 @@ class NodeDAO(StrictRedisCluster):
 class NodeManager():
     def __init__(self):
         self.ip = get_local_ip()
-        self.dao = NodeDAO()
+        self.redis = NodeRedis()
         self.set_accesses()
         self.set_free_space()
         print(self.ip)
@@ -58,19 +55,6 @@ class NodeManager():
         total, used, free = get_disk_usage('/mnt/sda1')
         return free
 
-    def scan(self, root=DEF_PATHS['INCOMING']):
-        resl = []
-        root = os.path.abspath(root)
-        if os.path.isdir(root):
-            if not(root.endswith(os.sep)):
-                root = root + os.sep
-            for dirpath, dirnames, filenames in os.walk(root):
-                for filepath in filenames:
-                    resl.append(os.path.join(dirpath, filepath))
-        else:
-            resl.append(root)
-        return resl
-
     def call_peers(self, timeout=TIMEOUT):
         resl = []
         for ip in CLUSTER:
@@ -82,17 +66,17 @@ class NodeManager():
         return resl
 
     def write_to_db(self, k, v):
-        res = self.dao.get(self.ip)
+        res = self.redis.get(self.ip)
         if res is None:
-            self.dao.set(self.ip, json.dumps({k: v}))
+            self.redis.set(self.ip, json.dumps({k: v}))
         else:
             resd = json.loads(res)
             resd[k] = v
-            self.dao.set(self.ip, json.dumps(resd))
+            self.redis.set(self.ip, json.dumps(resd))
 
     def read_from_db(self, k):
         res = None
-        params = json.loads(self.dao.get(self.ip))
+        params = json.loads(self.redis.get(self.ip))
         if params is not None:
             res = params.get(k)
         return res
@@ -113,11 +97,3 @@ class NodeManager():
 
     def get_status(self):
         return self.read_from_db('status')
-
-    def refresh_incoming(self):
-        path_d = {}
-        for p in glob.glob(DEF_PATHS['INCOMING'] + '*'):
-            if os.path.isdir(p):
-                p = p + os.sep
-            path_d[p] = get_path_size(p)
-        return path_d
