@@ -1,9 +1,9 @@
-from config import DNS, DEF_PATHS
+from config import DNS, DEF_PATHS, PERIOD_s
 from model import logger
 
-import glob
 import os
 import socket
+import time
 
 def get_local_ip(port=80):
     ip = None
@@ -44,36 +44,22 @@ def get_path_size(path):
         size = math.ceil(os.path.getsize(path) / 1024) * 1024
     return size
 
-def deep_scan(root=DEF_PATHS['INCOMING']):
-    resl = []
-    root = os.path.abspath(root)
-    if os.path.isdir(root):
-        if not(root.endswith(os.sep)):
-            root = root + os.sep
-        for dirpath, dirnames, filenames in os.walk(root):
-            for filepath in filenames:
-                resl.append(os.path.join(dirpath, filepath))
-    else:
-        resl.append(root)
-    return resl
 
-def scan(root=DEF_PATHS['INCOMING']):
-    resl = []
-    root = os.path.abspath(root)
-    if os.path.isdir(root):
-        if not(root.endswith(os.sep)):
-            root = root + os.sep
-        for filepath in glob.glob(root + '*'):
-            if os.path.isdir(filepath):
-                if not (filepath.endswith(os.sep)):
-                    filepath = filepath + os.sep
-            resl.append(filepath)
-    else:
-        resl.append(root)
-    return resl
+def get_func(f):
+    def _wrapper(*argc, **kwargs):
+        print('======================== running', f.__name__, '========================')
+        logger.info('running ' + f.__name__)
+        while True:
+            try:
+                f(*argc, **kwargs)
+            except Exception as err:
+                import traceback
+                logger.error(f.__name__ + ': ' + str(err))
+                logger.error(traceback.format_exc())
+            time.sleep(PERIOD_s)
+
+    return _wrapper
 
 
 if ('__main__' == __name__):
-    print(scan())
-    print(deep_scan())
     print(get_path_size('./'), get_path_size('./cicada.log'))

@@ -1,5 +1,5 @@
 from config import CLUSTER, DEF_PATHS, TIMEOUT, HTTP_PORT
-from utils import get_disk_usage, get_local_ip, get_path_size, scan, refresh_incoming
+from utils import get_disk_usage, get_local_ip, get_path_size
 from rediscluster import StrictRedisCluster
 
 import json
