@@ -75,7 +75,7 @@ class NodeManager():
         resl = []
         for ip in CLUSTER:
             if (ip != self.ip):
-                api_url = 'http://' + ip + ':' + str(PORT) + '/status'
+                api_url = 'http://' + ip + ':' + str(HTTP_PORT) + '/status'
                 res = requests.get(api_url)
                 if(200 == res.status_code):
                     resl.append(res.text)
