@@ -1,9 +1,41 @@
 from config import DNS, DEF_PATHS, PERIOD_s
+from const import UTF8
 from model import logger
 
+from hashlib import md5
+
+import glob
 import os
 import socket
 import time
+
+def deep_scan(root=DEF_PATHS['INCOMING']):
+    resl = []
+    root = os.path.abspath(root)
+    if os.path.isdir(root):
+        if not(root.endswith(os.sep)):
+            root = root + os.sep
+        for dirpath, dirnames, filenames in os.walk(root):
+            for filepath in filenames:
+                resl.append(os.path.join(dirpath, filepath))
+    else:
+        resl.append(root)
+    return resl
+
+def scan(root=DEF_PATHS['INCOMING']):
+    resl = []
+    root = os.path.abspath(root)
+    if os.path.isdir(root):
+        if not(root.endswith(os.sep)):
+            root = root + os.sep
+        for filepath in glob.glob(root + '*'):
+            if os.path.isdir(filepath):
+                if not (filepath.endswith(os.sep)):
+                    filepath = filepath + os.sep
+            resl.append(filepath)
+    else:
+        resl.append(root)
+    return resl
 
 def get_local_ip(port=80):
     ip = None
@@ -44,6 +76,28 @@ def get_path_size(path):
         size = math.ceil(os.path.getsize(path) / 1024) * 1024
     return size
 
+def get_md5(filepath):
+    res = None
+    absfp = os.path.abspath(filepath)
+    if os.path.isfile(absfp):
+        m = md5()
+        with open(absfp, 'rb') as f:
+            b = f.read(8096)
+            while(b):
+                m.update(b)
+                b = f.read(8096)
+            res = m.hexdigest()
+    elif os.path.isdir(absfp):
+        pathmd5 = md5()
+        pathmd5.update(absfp.encode(UTF8))
+        path_md5 = pathmd5.hexdigest()
+        with open(path_md5, 'w') as tmpf:
+            for filename in deep_scan(absfp):
+                print(get_md5(filename), file=tmpf)
+        res = get_md5(path_md5)
+        os.remove(path_md5)
+    return res
+
 
 def get_func(f):
     def _wrapper(*argc, **kwargs):
@@ -62,4 +116,6 @@ def get_func(f):
 
 
 if ('__main__' == __name__):
-    print(get_path_size('./'), get_path_size('./cicada.log'))
+    print(get_md5('tasks.py'))
+    print(get_md5('.'))
+#    print(get_path_size('./'), get_path_size('./cicada.log'))

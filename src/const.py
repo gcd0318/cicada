@@ -3,3 +3,5 @@ class NodeStatus():
     READY = 0
     BUSY = 1
     FULL = 2
+
+UTF8 = 'utf-8'
