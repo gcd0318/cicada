@@ -1,7 +1,5 @@
-from config import MIN_FREE_SPACE
-from const import NodeStatus
+from config import DEF_LEVEL
 from model import db, logger
-from models.node_manager import NodeManager
 
 import datetime
 
@@ -14,8 +12,7 @@ class FilePath(db.Model):
 
     fp = db.Column(db.String(1024), nullable=False)
     nodes = db.relationshuo('Node', secondary=node_filepath_xref, lazy='dynamic',
-                            backref=db.backref('nodes', lazy='dynamic'))
+                            backref=db.backref('filepaths', lazy='dynamic'))
+    level = db.Column(db.Integer, default=DEF_LEVEL)
     last_updated = db.Column(db.TIMESTAMP, nullable=False, onupdate=datetime.datetime.now,
                              default=datetime.datetime.now)
-
-    
