@@ -9,11 +9,6 @@ def refresh():
     node = Node()
     node.refresh()
 
-@get_func
-def journal(filepath, md5=None):
-    old_md5 = md5
-    new_md5 = get_md5(filepath)
-
 
 
 if ('__main__' == __name__):

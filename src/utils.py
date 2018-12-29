@@ -9,6 +9,21 @@ import os
 import socket
 import time
 
+
+def get_func(f):
+    def _wrapper(*argc, **kwargs):
+        print('======================== running', f.__name__, '========================')
+        logger.info('running ' + f.__name__)
+        while True:
+            try:
+                f(*argc, **kwargs)
+            except Exception as err:
+                import traceback
+                logger.error(f.__name__ + ': ' + str(err))
+                logger.error(traceback.format_exc())
+            time.sleep(PERIOD_s)
+    return _wrapper
+
 def deep_scan(root=DEF_PATHS['INCOMING']):
     resl = []
     root = os.path.abspath(root)
@@ -97,22 +112,6 @@ def get_md5(filepath):
         res = get_md5(path_md5)
         os.remove(path_md5)
     return res
-
-
-def get_func(f):
-    def _wrapper(*argc, **kwargs):
-        print('======================== running', f.__name__, '========================')
-        logger.info('running ' + f.__name__)
-        while True:
-            try:
-                f(*argc, **kwargs)
-            except Exception as err:
-                import traceback
-                logger.error(f.__name__ + ': ' + str(err))
-                logger.error(traceback.format_exc())
-            time.sleep(PERIOD_s)
-
-    return _wrapper
 
 
 if ('__main__' == __name__):
