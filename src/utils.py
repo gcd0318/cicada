@@ -180,6 +180,7 @@ def remote_cp(src, tgt):
                     sftp.put(fullpath, remote_path + rel_path + filename)
         elif(local == tgt):
             pass
+            # https://www.cnblogs.com/haigege/p/5517422.html
 
 
 
