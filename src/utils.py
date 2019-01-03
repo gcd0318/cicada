@@ -4,8 +4,11 @@ from model import logger
 
 from hashlib import md5
 
+import paramiko
+
 import glob
 import os
+import stat
 import socket
 import time
 
@@ -31,11 +34,27 @@ def deep_scan(root=DEF_PATHS['INCOMING']):
         if not(root.endswith(os.sep)):
             root = root + os.sep
         for dirpath, dirnames, filenames in os.walk(root):
+            if ([] == filenames):
+                filenames.append('')
             for filepath in filenames:
                 resl.append(os.path.join(dirpath, filepath))
     else:
         resl.append(root)
     return resl
+
+def deep_scan_remote(sftp, path):
+    res = []
+    if (not path.endswith(os.sep)):
+        path = path + os.sep
+    for fobj in sftp.listdir_attr(path):
+        filepath = path + fobj.filename
+        if stat.S_ISDIR(fobj.st_mode):
+            res = res + deep_scan_remote(sftp, filepath)
+        else:
+            res.append(filepath)
+        if ([] == res):
+            res = [path]
+        return res
 
 def scan(root=DEF_PATHS['INCOMING']):
     resl = []
@@ -114,7 +133,101 @@ def get_md5(filepath):
     return res
 
 
+def cp(src, tgt):
+    res = ''
+    if ('@' in src) or ('@' in tgt):
+        res = remote_cp(src, tgt)
+    else:
+        res = ''
+    return res
+
+def remote_cp(src, tgt):
+    # username:password@ip:port@path
+    (local, remote) = (src, tgt) if ('@' in tgt) else (tgt, src)
+    auth, sock, remote_path = remote.split('@')
+    username, password = auth.split(':')
+    if not(':' in sock):
+        sock = sock + ':22'
+    t = paramiko.Transport(sock)
+    t.connect(username=username, password=password)
+    sftp = paramiko.SFTPClient.from_transport(t)
+    try:
+        logger.debug('copy from ' + src + ' to ' + tgt)
+        local = os.path.abspath(local)
+        logger.debug('local file is as ' + local)
+        if (local == src):
+            if os.path.isdir(src):
+                filename = src.split(os.sep)[-1]
+                if not(remote_path.endswith(filename)):
+                    if(not remote_path.endswith(os.sep)):
+                        remote_path = remote_path + os.sep
+                    remote_path = remote_path + filename
+                sftp.put(src, remote_path)
+            else:
+                if (not remote_path.endswith(os.sep)):
+                    remote_path = remote_path + os.sep
+                for fullpath in deep_scan(src):
+                    fplist = fullpath.replace(src).split(os.sep)
+                    rel_path = os.sep.join(fplist[:-1])
+                    filename = fplist[-1]
+                    if rel_path.startswith(os.sep):
+                        rel_path = rel_path[1:]
+                    if (not rel_path.endswith(os.sep)):
+                        rel_path = rel_path + os.sep
+                    if (not remote_path.endswith(os.sep)):
+                        remote_path = remote_path + os.sep
+                    sftp.mkdir(remote_path + rel_path)
+                    sftp.put(fullpath, remote_path + rel_path + filename)
+        elif(local == tgt):
+            pass
+
+
+
+
+
+            if os.path.isdir(local):
+                for root, paths, filenames in os.walk(local):
+                    for filename in filenames:
+                        logger.debug(filename)
+                        fullpath = root + os.sep + filename
+                        logger.debug(filename + ' ' + fullpath)
+                        remote_fn = remote + '/' + fullpath.replace(local, '')
+                        logger.debug('send ' + fullpath + ' to ' + ip + ' as ' + remote_fn)
+                        sftp.put(fullpath, remote_fn)
+                    for path in paths:
+                        local_path = root + os.sep + path
+                        remote_path = remote + '/' + local_path.replace(local, '')
+                        logger.debug('create ' + remote_path + ' on ' + ip)
+                        sftp.mkdir(remote_path)
+                dest = remote
+            else:
+                dest = remote + '/' + local.split(os.sep)[-1]
+                logger.debug('copy ' + local + ' to ' + dest)
+                sftp.put(local, dest)
+        elif ('r2l' == direction):
+            if (not os.path.exists(localpath)):
+                os.makedirs(localpath)
+            src = remote
+            if (local.endswith(os.sep)):
+                dest = localpath + os.sep + remote.split(os.sep)[-1]
+            else:
+                dest = local
+            paramiko.SFTPClient.from_transport(t).get(src, dest)
+    except Exception as err:
+        logger.error(err)
+        dest = None
+    finally:
+        t.close()
+    logger.debug('copied as ' + dest)
+    return dest
+
+
 if ('__main__' == __name__):
+    print(scan())
+    t = paramiko.Transport('192.168.56.101:22')
+    t.connect(username='gcd0318', password='12121212')
+    sftp = paramiko.SFTPClient.from_transport(t)
+    print(deep_scan_remote(sftp, '/home/gcd0318/work'))
     print(get_md5('tasks.py'))
     print(get_md5('.'))
 #    print(get_path_size('./'), get_path_size('./cicada.log'))
