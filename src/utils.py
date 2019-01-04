@@ -27,6 +27,30 @@ def get_func(f):
             time.sleep(PERIOD_s)
     return _wrapper
 
+def is_dir(path, sock=None, sftp=None):
+    res = False
+    if (sock is None) and (sftp is None) and (not '@' in path):
+        res = os.path.isdir(path)
+    else:
+        username = None
+        password = None
+        try:
+            if ('@' in path):
+                auth, sock, remote_path = path.split('@')
+                username, password = auth.split(':')
+                if not (':' in sock):
+                    sock = sock + ':22'
+            else:
+                remote_path = path
+            if sock is not None:
+                t = paramiko.Transport(sock)
+                t.connect(username=username, password=password)
+                sftp = paramiko.SFTPClient.from_transport(t)
+            res = stat.S_ISDIR(sftp.lstat(remote_path).st_mode)
+        except Exception as err:
+            logger.error(err)
+    return res
+
 def deep_scan(root=DEF_PATHS['INCOMING']):
     resl = []
     root = os.path.abspath(root)
@@ -42,19 +66,20 @@ def deep_scan(root=DEF_PATHS['INCOMING']):
         resl.append(root)
     return resl
 
-def deep_scan_remote(sftp, path):
+def deep_scan_remote(sftp, path=DEF_PATHS['INCOMING']):
     res = []
-    if (not path.endswith(os.sep)):
-        path = path + os.sep
-    for fobj in sftp.listdir_attr(path):
-        filepath = path + fobj.filename
-        if stat.S_ISDIR(fobj.st_mode):
-            res = res + deep_scan_remote(sftp, filepath)
-        else:
-            res.append(filepath)
-        if ([] == res):
-            res = [path]
-        return res
+    if is_dir(path=path, sftp=sftp):
+        if (not path.endswith(os.sep)):
+            path = path + os.sep
+        for fobj in sftp.listdir_attr(path):
+            filepath = path + fobj.filename
+            if stat.S_ISDIR(fobj.st_mode):
+                res = res + deep_scan_remote(sftp, filepath)
+            else:
+                res.append(filepath)
+    if ([] == res):
+        res = [path]
+    return res
 
 def scan(root=DEF_PATHS['INCOMING']):
     resl = []
@@ -141,6 +166,21 @@ def cp(src, tgt):
         res = ''
     return res
 
+def remote_mkdir(sftp, path):
+    path_split = path.split(os.sep)
+    paths = []
+    i = 0
+    remote_path = os.sep.join(path_split[:len(path_split) - i])
+    while (i < len(path_split))and (not(is_dir(sftp=sftp, path=remote_path))):
+        print(remote_path, is_dir(sftp=sftp, path=remote_path))
+        paths.append(remote_path)
+        i = i + 1
+        remote_path = os.sep.join(path_split[:len(path_split) - i])
+    print(paths)
+    while (0 < len(paths)):
+        sftp.mkdir(paths.pop())
+
+
 def remote_cp(src, tgt):
     # username:password@ip:port@path
     (local, remote) = (src, tgt) if ('@' in tgt) else (tgt, src)
@@ -151,84 +191,101 @@ def remote_cp(src, tgt):
     t = paramiko.Transport(sock)
     t.connect(username=username, password=password)
     sftp = paramiko.SFTPClient.from_transport(t)
+    res = None
     try:
         logger.debug('copy from ' + src + ' to ' + tgt)
+        src_root = ''
+        tgt_root = ''
         local = os.path.abspath(local)
         logger.debug('local file is as ' + local)
         if (local == src):
+            tgt_path = remote_path
             if os.path.isdir(src):
-                filename = src.split(os.sep)[-1]
-                if not(remote_path.endswith(filename)):
-                    if(not remote_path.endswith(os.sep)):
-                        remote_path = remote_path + os.sep
-                    remote_path = remote_path + filename
-                sftp.put(src, remote_path)
+                src_files = deep_scan(src)
+                if src.endswith(os.sep):
+                    src_root = src.split(os.sep)[-2]
+                else:
+                    src_root = src.split(os.sep)[-1]
+                while tgt_path.endswith(os.sep):
+                    tgt_path = tgt_path[:-1]
+                tgt_path = os.sep.join([tgt_path, src_root, ''])
             else:
-                if (not remote_path.endswith(os.sep)):
-                    remote_path = remote_path + os.sep
-                for fullpath in deep_scan(src):
-                    fplist = fullpath.replace(src).split(os.sep)
+                src_files = [src]
+                if is_dir(sftp=sftp, path=tgt_path):
+                    pass
+            for fullpath in src_files:
+                rel_path = ''
+                if is_dir(src):
+                    fplist = fullpath.replace(src, '').split(os.sep)
                     rel_path = os.sep.join(fplist[:-1])
                     filename = fplist[-1]
-                    if rel_path.startswith(os.sep):
-                        rel_path = rel_path[1:]
-                    if (not rel_path.endswith(os.sep)):
-                        rel_path = rel_path + os.sep
-                    if (not remote_path.endswith(os.sep)):
-                        remote_path = remote_path + os.sep
-                    sftp.mkdir(remote_path + rel_path)
-                    sftp.put(fullpath, remote_path + rel_path + filename)
-        elif(local == tgt):
-            pass
-            # https://www.cnblogs.com/haigege/p/5517422.html
-
-
-
-
-
-            if os.path.isdir(local):
-                for root, paths, filenames in os.walk(local):
-                    for filename in filenames:
-                        logger.debug(filename)
-                        fullpath = root + os.sep + filename
-                        logger.debug(filename + ' ' + fullpath)
-                        remote_fn = remote + '/' + fullpath.replace(local, '')
-                        logger.debug('send ' + fullpath + ' to ' + ip + ' as ' + remote_fn)
-                        sftp.put(fullpath, remote_fn)
-                    for path in paths:
-                        local_path = root + os.sep + path
-                        remote_path = remote + '/' + local_path.replace(local, '')
-                        logger.debug('create ' + remote_path + ' on ' + ip)
-                        sftp.mkdir(remote_path)
-                dest = remote
+                else:
+                    filename = fullpath.split(os.sep)[-1]
+                while rel_path.startswith(os.sep):
+                    rel_path = rel_path[1:]
+                if (not tgt_path.endswith(os.sep)):
+                    tgt_path = tgt_path + os.sep
+                remotepath = tgt_path + rel_path
+                if not(remotepath.endswith(os.sep)):
+                    remotepath = remotepath + os.sep
+                if not(is_dir(sftp=sftp, path=remotepath)):
+                    sftp.mkdir(remotepath)
+                if not(is_dir(path=fullpath)):
+                    sftp.put(fullpath, remotepath + filename)
+        elif(remote == src):
+            src_root = ''
+            src_path = remote_path
+            if is_dir(sftp=sftp, path=src_path):
+                src_files = deep_scan_remote(sftp, src_path)
+                if src_path.endswith(os.sep):
+                    src_root = src_path.split(os.sep)[-2]
+                else:
+                    src_root = src_path.split(os.sep)[-1]
             else:
-                dest = remote + '/' + local.split(os.sep)[-1]
-                logger.debug('copy ' + local + ' to ' + dest)
-                sftp.put(local, dest)
-        elif ('r2l' == direction):
-            if (not os.path.exists(localpath)):
-                os.makedirs(localpath)
-            src = remote
-            if (local.endswith(os.sep)):
-                dest = localpath + os.sep + remote.split(os.sep)[-1]
-            else:
-                dest = local
-            paramiko.SFTPClient.from_transport(t).get(src, dest)
+                src_files = [src_path]
+                src_path = os.sep.join(src_path.split(os.sep)[:-1])
+            for fullpath in src_files:
+                fplist = fullpath.replace(src_path, '').split(os.sep)
+                rel_path = os.sep.join(fplist[:-1])
+                filename = fplist[-1]
+                if rel_path.startswith(os.sep):
+                    rel_path = rel_path[1:]
+                if (not local.endswith(os.sep)):
+                    local = local + os.sep
+                localpath = local + src_root + os.sep + rel_path
+                if not(localpath.endswith(os.sep)):
+                    localpath = localpath + os.sep
+                if not(os.path.exists(localpath)):
+                    os.mkdir(localpath)
+                if not(is_dir(sftp=sftp, path=fullpath)):
+                    sftp.get(fullpath, localpath + filename)
+        logger.debug(src + ' is copied to ' + tgt)
+        res = tgt + os.sep + src_root
     except Exception as err:
         logger.error(err)
-        dest = None
+        import traceback
+        logger.error(traceback.format_exc())
+        res = None
     finally:
         t.close()
-    logger.debug('copied as ' + dest)
-    return dest
+    return res
 
 
 if ('__main__' == __name__):
-    print(scan())
-    t = paramiko.Transport('192.168.56.101:22')
-    t.connect(username='gcd0318', password='12121212')
-    sftp = paramiko.SFTPClient.from_transport(t)
-    print(deep_scan_remote(sftp, '/home/gcd0318/work'))
-    print(get_md5('tasks.py'))
-    print(get_md5('.'))
+#    src = ''
+#    print(scan())
+#    t = paramiko.Transport('10.50.180.56:10022')
+#    t.connect(username='guochen', password='12121212')
+#    sftp = paramiko.SFTPClient.from_transport(t)
+#    print(is_dir(path='/home/guochen/downloads', sftp=sftp))
+#    print(deep_scan_remote(sftp, '/home/guochen/downloads'))
+#    print(deep_scan_remote(sftp, '/home/guochen/downloads/crontab.log'))
+#    print(is_dir(path='/home/guochen/downloads'))
+#    print(is_dir(path='guochen:12121212@10.50.180.56:10022@/home/guochen/downloads/crontab.log'))
+#    print(remote_cp('guochen:12121212@10.50.180.56:10022@/home/guochen/downloads', os.path.abspath('.')))
+#    print(remote_cp('guochen:12121212@10.50.180.56:10022@/home/guochen/downloads/crontab.log', os.path.abspath('.')))
+    print(remote_cp('/home/gcd0318/downloads', 'guochen:12121212@10.50.180.56:10022@/home/guochen'))
+#    print(remote_cp('/home/gcd0318/downloads/crontab.log', 'guochen:12121212@10.50.180.56:10022@/home/guochen'))
+#    print(get_md5('tasks.py'))
+#    print(get_md5('.'))
 #    print(get_path_size('./'), get_path_size('./cicada.log'))
