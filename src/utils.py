@@ -152,7 +152,7 @@ def get_md5(filepath):
         path_md5 = pathmd5.hexdigest()
         with open(path_md5, 'w') as tmpf:
             for filename in deep_scan(absfp):
-                print(get_md5(filename), file=tmpf)
+                print(filename.replace(absfp, ''), get_md5(filename), file=tmpf)
         res = get_md5(path_md5)
         os.remove(path_md5)
     return res
@@ -284,8 +284,8 @@ if ('__main__' == __name__):
 #    print(is_dir(path='guochen:12121212@10.50.180.56:10022@/home/guochen/downloads/crontab.log'))
 #    print(remote_cp('guochen:12121212@10.50.180.56:10022@/home/guochen/downloads', os.path.abspath('.')))
 #    print(remote_cp('guochen:12121212@10.50.180.56:10022@/home/guochen/downloads/crontab.log', os.path.abspath('.')))
-    print(remote_cp('/home/gcd0318/downloads', 'guochen:12121212@10.50.180.56:10022@/home/guochen'))
+#    print(remote_cp('/home/gcd0318/downloads', 'guochen:12121212@10.50.180.56:10022@/home/guochen'))
 #    print(remote_cp('/home/gcd0318/downloads/crontab.log', 'guochen:12121212@10.50.180.56:10022@/home/guochen'))
 #    print(get_md5('tasks.py'))
-#    print(get_md5('.'))
+    print(get_md5('.'))
 #    print(get_path_size('./'), get_path_size('./cicada.log'))
