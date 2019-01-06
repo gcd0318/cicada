@@ -150,9 +150,12 @@ def get_md5(filepath):
         pathmd5 = md5()
         pathmd5.update(absfp.encode(UTF8))
         path_md5 = pathmd5.hexdigest()
+        md5_d = {}
+        for filename in deep_scan(absfp):
+            md5_d[filename.replace(absfp, '')] = get_md5(filename)
         with open(path_md5, 'w') as tmpf:
-            for filename in deep_scan(absfp):
-                print(filename.replace(absfp, ''), get_md5(filename), file=tmpf)
+            for k, v in sorted(md5_d.items(), key=lambda item:item[0]):
+                print(k, v, file=tmpf)
         res = get_md5(path_md5)
         os.remove(path_md5)
     return res
