@@ -91,7 +91,7 @@ class NodeManager():
     def set_accesses(self):
         return self.write_to_redis('accesses', self.are_accessible())
     def get_accesses(self):
-        return self.read_from_db('accesses')
+        return self.read_from_redis('accesses')
 
     def set_status(self, status):
         return self.write_to_redis('status', status)
