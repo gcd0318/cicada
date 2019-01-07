@@ -13,8 +13,8 @@ class NodeRedis(StrictRedisCluster):
 
     def insert_or_update(self, name, val):
         self.set(name, val)
-    def get(self, name):
-        return self.get(name)
+#    def get(self, name):
+#        return self.get(name)
 
     def insert_or_update_dict(self, name, dic):
         if self.exists(name):
@@ -65,7 +65,7 @@ class NodeManager():
                     resl.append(res.text)
         return resl
 
-    def write_to_db(self, k, v):
+    def write_to_redis(self, k, v):
         res = self.redis.get(self.ip)
         if res is None:
             self.redis.set(self.ip, json.dumps({k: v}))
@@ -73,8 +73,9 @@ class NodeManager():
             resd = json.loads(res)
             resd[k] = v
             self.redis.set(self.ip, json.dumps(resd))
+        return self.read_from_redis(k) == v
 
-    def read_from_db(self, k):
+    def read_from_redis(self, k):
         res = None
         params = json.loads(self.redis.get(self.ip))
         if params is not None:
@@ -82,18 +83,18 @@ class NodeManager():
         return res
 
     def set_free_space(self):
-        return self.write_to_db('free', self.free_space())
+        return self.write_to_redis('free', self.free_space())
 
     def get_free_space(self):
-        return self.read_from_db('free')
+        return self.read_from_redis('free')
 
     def set_accesses(self):
-        return self.write_to_db('accesses', self.are_accessible())
+        return self.write_to_redis('accesses', self.are_accessible())
     def get_accesses(self):
         return self.read_from_db('accesses')
 
     def set_status(self, status):
-        return self.write_to_db('status', status)
+        return self.write_to_redis('status', status)
 
     def get_status(self):
-        return self.read_from_db('status')
+        return self.read_from_redis('status')

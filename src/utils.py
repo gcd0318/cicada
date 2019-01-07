@@ -51,12 +51,20 @@ def is_dir(path, sock=None, sftp=None):
             logger.error(err)
     return res
 
+def pathize(path):
+    tmp = path.replace(os.sep+os.sep, os.sep)
+    while(tmp != path):
+        path, tmp = tmp, path.replace(os.sep+os.sep, os.sep)
+    if not (path.endswith(os.sep)):
+        path = path + os.sep
+    return path
+
+
 def deep_scan(root=DEF_PATHS['INCOMING']):
     resl = []
     root = os.path.abspath(root)
     if os.path.isdir(root):
-        if not(root.endswith(os.sep)):
-            root = root + os.sep
+        root = pathize(root)
         for dirpath, dirnames, filenames in os.walk(root):
             if ([] == filenames):
                 filenames.append('')
@@ -85,8 +93,7 @@ def scan(root=DEF_PATHS['INCOMING']):
     resl = []
     root = os.path.abspath(root)
     if os.path.isdir(root):
-        if not(root.endswith(os.sep)):
-            root = root + os.sep
+        root = pathize(root)
         for filepath in glob.glob(root + '*'):
             if os.path.isdir(filepath):
                 if not (filepath.endswith(os.sep)):
@@ -140,6 +147,7 @@ def get_md5(filepath):
     absfp = os.path.abspath(filepath)
     if os.path.isfile(absfp):
         m = md5()
+#        m.update(absfp.encode(UTF8))
         with open(absfp, 'rb') as f:
             b = f.read(8096)
             while(b):
@@ -147,13 +155,16 @@ def get_md5(filepath):
                 b = f.read(8096)
             res = m.hexdigest()
     elif os.path.isdir(absfp):
+        absfp = pathize(absfp)
         pathmd5 = md5()
         pathmd5.update(absfp.encode(UTF8))
         path_md5 = pathmd5.hexdigest()
-        md5_d = {}
-        for filename in deep_scan(absfp):
-            md5_d[filename.replace(absfp, '')] = get_md5(filename)
         with open(path_md5, 'w') as tmpf:
+#            print(absfp, path_md5, file=tmpf)
+            md5_d = {}
+            for filename in deep_scan(absfp):
+                if(filename != absfp):
+                    md5_d[filename.replace(absfp, '')] = get_md5(filename)
             for k, v in sorted(md5_d.items(), key=lambda item:item[0]):
                 print(k, v, file=tmpf)
         res = get_md5(path_md5)
@@ -179,7 +190,6 @@ def remote_mkdir(sftp, path):
         paths.append(remote_path)
         i = i + 1
         remote_path = os.sep.join(path_split[:len(path_split) - i])
-    print(paths)
     while (0 < len(paths)):
         sftp.mkdir(paths.pop())
 
