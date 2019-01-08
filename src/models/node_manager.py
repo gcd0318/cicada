@@ -11,7 +11,7 @@ class NodeRedis(StrictRedisCluster):
         startup_nodes = [{"host": host, "port": port}]
         StrictRedisCluster.__init__(self, startup_nodes=startup_nodes, decode_responses=True)
 
-    def insert_or_update(self, name, val):
+    def insert_or_update_str(self, name, val):
         self.set(name, val)
 #    def get(self, name):
 #        return self.get(name)
@@ -75,11 +75,14 @@ class NodeManager():
             self.redis.set(self.ip, json.dumps(resd))
         return self.read_from_redis(k) == v
 
-    def read_from_redis(self, k):
+    def read_from_redis(self, k=None):
         res = None
         params = json.loads(self.redis.get(self.ip))
-        if params is not None:
-            res = params.get(k)
+        if k is None:
+            res = params
+        else:
+            if params is not None:
+                res = params.get(k)
         return res
 
     def set_free_space(self):

@@ -11,7 +11,7 @@ def refresh(node):
     node.refresh()
 
 #@get_func
-def get_incoming(node):
+def incoming_to_redis(node):
     res = True
     for filepath in scan():
         data = {
@@ -26,12 +26,17 @@ def get_incoming(node):
         finally:
             pass
         data['target_copy'] = target_copy
-        print (filepath, data)
+#        print (filepath, data)
         res = res and node.manager.write_to_redis(filepath, data)
     return res
+
+def incoming_from_redis(node):
+    return node.manager.read_from_redis()
 
 
 if ('__main__' == __name__):
     node = Node()
     refresh(node)
-    print(get_incoming(node))
+    incoming_to_redis(node)
+    status = incoming_from_redis(node)
+    print(type(status))
