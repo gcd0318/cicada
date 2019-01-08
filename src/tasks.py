@@ -6,15 +6,15 @@ from models.node import Node
 
 import os
 
-#@get_func
+@get_func
 def refresh(node):
     node.refresh()
 
-#@get_func
+@get_func
 def incoming_to_redis(node):
-    res = True
+    data = {}
     for filepath in scan():
-        data = {
+        filedata = {
             'md5': get_md5(filepath),
             'size': get_path_size(filepath),
         }
@@ -25,18 +25,23 @@ def incoming_to_redis(node):
             logger.warning(err)
         finally:
             pass
-        data['target_copy'] = target_copy
-#        print (filepath, data)
-        res = res and node.manager.write_to_redis(filepath, data)
-    return res
+        filedata['target_copy'] = target_copy
+        data[filepath] = filedata
+    return node.manager.write_to_redis('files', data)
 
-def incoming_from_redis(node):
+def _incoming_from_redis(node):
     return node.manager.read_from_redis()
+
+@get_func
+def copy_local():
+    pass
 
 
 if ('__main__' == __name__):
     node = Node()
     refresh(node)
     incoming_to_redis(node)
-    status = incoming_from_redis(node)
+    status = incoming_from_redis(node)['files']
     print(type(status))
+    for filepath in status:
+        print(filepath, status[filepath])

@@ -284,6 +284,7 @@ def remote_cp(src, tgt):
     return res
 
 
+
 if ('__main__' == __name__):
 #    src = ''
 #    print(scan())
