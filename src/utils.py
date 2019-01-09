@@ -1,8 +1,6 @@
-from config import DNS, DEF_PATHS, PERIOD_s
+from config import DNS, DEF_PATHS, PERIOD_s, ENCRYPT_BLOCK
 from const import UTF8
 from model import logger
-
-from hashlib import md5
 
 import paramiko
 
@@ -142,33 +140,36 @@ def get_path_size(path):
         size = math.ceil(os.path.getsize(path) / 1024) * 1024
     return size
 
-def get_md5(filepath):
+def get_encrypt(filepath, encrypt='md5'):
     res = None
+    from hashlib import md5 as encrypt_func
+    if('sha512' == encrypt):
+        from hashlib import sha512 as encrypt_func
     absfp = os.path.abspath(filepath)
     if os.path.isfile(absfp):
-        m = md5()
+        m = encrypt_func()
 #        m.update(absfp.encode(UTF8))
         with open(absfp, 'rb') as f:
-            b = f.read(8096)
+            b = f.read(ENCRYPT_BLOCK)
             while(b):
                 m.update(b)
-                b = f.read(8096)
+                b = f.read(ENCRYPT_BLOCK)
             res = m.hexdigest()
     elif os.path.isdir(absfp):
         absfp = pathize(absfp)
-        pathmd5 = md5()
-        pathmd5.update(absfp.encode(UTF8))
-        path_md5 = pathmd5.hexdigest()
-        with open(path_md5, 'w') as tmpf:
+        pathencrypt = encrypt_func()
+        pathencrypt.update(absfp.encode(UTF8))
+        path_encrypt = pathencrypt.hexdigest()
+        with open(path_encrypt, 'w') as tmpf:
 #            print(absfp, path_md5, file=tmpf)
-            md5_d = {}
+            encrypt_d = {}
             for filename in deep_scan(absfp):
                 if(filename != absfp):
-                    md5_d[filename.replace(absfp, '')] = get_md5(filename)
-            for k, v in sorted(md5_d.items(), key=lambda item:item[0]):
+                    encrypt_d[filename.replace(absfp, '')] = get_encrypt(filename, encrypt=encrypt)
+            for k, v in sorted(encrypt_d.items(), key=lambda item:item[0]):
                 print(k, v, file=tmpf)
-        res = get_md5(path_md5)
-        os.remove(path_md5)
+        res = get_encrypt(path_encrypt, encrypt=encrypt)
+        os.remove(path_encrypt)
     return res
 
 def remote_mkdir(sftp, path):
@@ -292,5 +293,6 @@ if ('__main__' == __name__):
 #    print(remote_cp('/home/gcd0318/downloads', 'guochen:12121212@10.50.180.56:10022@/home/guochen'))
 #    print(remote_cp('/home/gcd0318/downloads/crontab.log', 'guochen:12121212@10.50.180.56:10022@/home/guochen'))
 #    print(get_md5('tasks.py'))
-    print(get_md5('.'))
+#    print(get_encrypt('d:/cn_windows_10_consumer_edition_version_1809_updated_sept_2018_x64_dvd_051b7719.iso', encrypt='sha512'))
+    print(get_encrypt('.', encrypt='sha512'))
 #    print(get_path_size('./'), get_path_size('./cicada.log'))

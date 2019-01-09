@@ -1,18 +1,16 @@
 from config import DEF_LEVEL
 from model import db, logger
+from utils import get_encrypt
 
 import datetime
 
-node_filepath_xref = db.Table('node_filepath_xrefs',
-                              db.Column('node_id', db.Integer, db.ForeignKey('nodes.id')),
-                              db.Column('fp', db.String(1024), db.ForeignKey('filepaths.fp'))
-                              )
 class FilePath(db.Model):
     __tablename__ = 'filepaths'
 
-    fp = db.Column(db.String(1024), nullable=False)
-    nodes = db.relationshuo('Node', secondary=node_filepath_xref, lazy='dynamic',
-                            backref=db.backref('filepaths', lazy='dynamic'))
+    filepath = db.Column(db.String(1024), nullable=False)
+    fp_encrypt = db.Column(db.String(128), nullable=False, unique=True, primary_key=True)
+    node_ip = db.Column(db.String(15), unique=True, primary_key=True)
     level = db.Column(db.Integer, default=DEF_LEVEL)
+    encrypt = db.Column(db.String(32), nullable=False)
     last_updated = db.Column(db.TIMESTAMP, nullable=False, onupdate=datetime.datetime.now,
                              default=datetime.datetime.now)

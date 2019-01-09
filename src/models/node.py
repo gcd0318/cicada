@@ -1,22 +1,16 @@
-from config import MIN_FREE_SPACE
+from config import MIN_FREE_SPACE, CLUSTER
 from const import NodeStatus
 from model import db, logger
 from models.node_manager import NodeManager
+from utils import get_local_ip, get_local_hostname
 
 import datetime
 
-class Node(db.Model):
-    __tablename__ = 'nodes'
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    hostname = db.Column(db.String(64), default='', nullable=True)
-    ip = db.Column(db.String(16), default='127.0.0.1', nullable=False, unique=True)
-    port = db.Column(db.Integer, nullable=False, default=22)
-    username = db.Column(db.String(64), default='cicada', nullable=True)
-    password = db.Column(db.String(1024), default='', nullable=True)
-    last_updated = db.Column(db.TIMESTAMP, nullable=False, onupdate=datetime.datetime.now,
-                             default=datetime.datetime.now)
-    manager = NodeManager()
+class Node():
+    def __init__(self):
+        self.manager = NodeManager()
+        self.ip = get_local_ip()
+        self.hostname = get_local_hostname()
 
     def to_json(self):
         self.refresh()
