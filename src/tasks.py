@@ -16,19 +16,27 @@ def refresh(node):
 
 #@get_func
 def incoming_to_redis(node):
-    data = node.manager.read_from_redis().get('files', {})
-    for filepath in scan():
-        old_md5 = ''
+    data = _threading_incoming_to_redis(node.manager.read_from_redis().get('files', {}))
+    return node.manager.write_to_redis('files', data)
+
+def _threading_incoming_to_redis(data):
+    threads = []
+
+    def runner(filepath):
+        print(filepath)
+        filedata = {'copy_num': 0}
+        if filepath in data:
+            filedata = data[filepath]
+        old_md5 = filedata.get('md5', '')
         new_md5 = get_md5(filepath)
-        while(old_md5 != new_md5):
-            time.sleep(1)
-            old_md5 = new_md5
-            new_md5 = get_md5(filepath)
-        if not(filepath in data):
-            filedata = {
-                'md5': get_md5(filepath),
-                'size': get_path_size(filepath),
-            }
+        if (old_md5 != new_md5):
+            while(old_md5 != new_md5):
+                time.sleep(1)
+                old_md5 = new_md5
+                new_md5 = get_md5(filepath)
+            filedata['md5'] = new_md5
+            filedata['size'] = get_path_size(filepath)
+
             target_copy = COPIES
             try:
                 target_copy = int(filepath.split(os.sep)[-2])
@@ -39,8 +47,17 @@ def incoming_to_redis(node):
             filedata['target_copy'] = target_copy
             filedata['copy_num'] = 0
             data[filepath] = filedata
-    return node.manager.write_to_redis('files', data)
 
+    for filepath in scan():
+        _t = threading.Thread(
+            target=runner,
+            args=(filepath,)
+        )
+        _t.start()
+        threads.append(_t)
+    for _t in threads:
+        _t.join()
+    return data
 
 
 #@get_func
@@ -54,7 +71,6 @@ def copy_local(node, src=DEF_PATHS['INCOMING'], tgt=DEF_PATHS['BACKUP']):
     if (NodeStatus.READY == status) and accesses['BACKUP']:
         for filepath in files:
             if src in filepath:
-                print(filepath)
                 tgt = pathize(tgt)
                 filestat = files[filepath]
                 size = filestat['size']
@@ -71,7 +87,7 @@ def copy_local(node, src=DEF_PATHS['INCOMING'], tgt=DEF_PATHS['BACKUP']):
             else:
                 res = False
             rs['files'][filepath]['copy_num'] = copy_num
-            print(node.manager.write_to_redis('files', rs['files']))
+            node.manager.write_to_redis('files', rs['files'])
     return res
 
 
