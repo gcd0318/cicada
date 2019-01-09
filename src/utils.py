@@ -8,8 +8,8 @@ import paramiko
 
 import glob
 import os
-import stat
 import socket
+import stat
 import time
 
 
@@ -169,15 +169,6 @@ def get_md5(filepath):
                 print(k, v, file=tmpf)
         res = get_md5(path_md5)
         os.remove(path_md5)
-    return res
-
-
-def cp(src, tgt):
-    res = ''
-    if ('@' in src) or ('@' in tgt):
-        res = remote_cp(src, tgt)
-    else:
-        res = ''
     return res
 
 def remote_mkdir(sftp, path):

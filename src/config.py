@@ -14,6 +14,7 @@ class DefaultPaths():
     BACKUP = ROOT + 'backup/'
 
 COPIES = 2
+BLANK = 0
 
 DNS = ['192.168.75.21', '8.8.8.8', '4.4.4.4', '114.114.114.114']
 
