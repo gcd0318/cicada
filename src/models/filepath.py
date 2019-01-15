@@ -7,10 +7,10 @@ import datetime
 class FilePath(db.Model):
     __tablename__ = 'filepaths'
 
-    filepath = db.Column(db.String(1024), nullable=False)
-    fp_encrypt = db.Column(db.String(128), nullable=False, unique=True, primary_key=True)
-    node_ip = db.Column(db.String(15), unique=True, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    filepath = db.Column(db.String(4096), nullable=False)
+    fp_encrypt = db.Column(db.String(128), nullable=False)
+    node_ip = db.Column(db.String(15))
     level = db.Column(db.Integer, default=DEF_LEVEL)
     encrypt = db.Column(db.String(32), nullable=False)
-    last_updated = db.Column(db.TIMESTAMP, nullable=False, onupdate=datetime.datetime.now,
-                             default=datetime.datetime.now)
+    last_updated = db.Column(db.TIMESTAMP, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
