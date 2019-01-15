@@ -7,6 +7,7 @@ app = Flask(__name__)
 
 #app.config['ARTISAN_POSTS_PER_PAGE'] = ITEMS_PER_PAGE
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://cicada:cicada@localhost:3306/cicada?charset=utf8&autocommit=true'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 import logging.handlers
