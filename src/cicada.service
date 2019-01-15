@@ -3,8 +3,9 @@ Description=cicada
 After=network.target
 
 [Service]
-ExecStart=/work/cicada/src/tasks.py
-Type=forking
+WorkingDirectory=/home/gcd0318/work/cicada/src
+ExecStart=python tasks.py
+Type=simple
 
 [Install]
 WantedBy=multi-user.target
