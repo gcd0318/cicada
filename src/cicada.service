@@ -1,0 +1,10 @@
+[Unit]
+Description=cicada
+After=network.target
+
+[Service]
+ExecStart=/work/cicada/src/tasks.py
+Type=forking
+
+[Install]
+WantedBy=multi-user.target
