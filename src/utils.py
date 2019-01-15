@@ -6,6 +6,7 @@ import paramiko
 
 import glob
 import os
+import shutil
 import socket
 import stat
 import time
@@ -13,14 +14,14 @@ import time
 
 def get_func(f):
     def _wrapper(*argc, **kwargs):
-        print('======================== running', f.__name__, '========================')
         logger.info('running ' + f.__name__)
         while True:
             try:
                 f(*argc, **kwargs)
             except Exception as err:
                 import traceback
-                logger.error(f.__name__ + ': ' + str(err))
+                logger.error(f.__name__)
+                logger.error(str(err))
                 logger.error(traceback.format_exc())
             time.sleep(PERIOD_s)
     return _wrapper
@@ -46,16 +47,18 @@ def is_dir(path, sock=None, sftp=None):
                 sftp = paramiko.SFTPClient.from_transport(t)
             res = stat.S_ISDIR(sftp.lstat(remote_path).st_mode)
         except Exception as err:
+            logger.error(__name__)
             logger.error(err)
     return res
 
-def pathize(path):
-    tmp = path.replace(os.sep+os.sep, os.sep)
-    while(tmp != path):
-        path, tmp = tmp, path.replace(os.sep+os.sep, os.sep)
-    if not (path.endswith(os.sep)):
-        path = path + os.sep
-    return path
+def pathize(filepath, force=False):
+    if os.path.isdir(filepath) or force:
+        tmp = filepath.replace(os.sep+os.sep, os.sep)
+        while(tmp != filepath):
+            filepath, tmp = tmp, filepath.replace(os.sep+os.sep, os.sep)
+        if not (filepath.endswith(os.sep)):
+            filepath = filepath + os.sep
+    return filepath
 
 
 def deep_scan(root=DEF_PATHS['INCOMING']):
@@ -111,7 +114,8 @@ def get_local_ip(port=80):
             ip = s.getsockname()[0]
         except Exception as err:
             import traceback
-            logger.error(str(err))
+            logger.error(__name__)
+            logger.error(err)
             logger.error(traceback.format_exc())
         finally:
             i = i + 1
@@ -140,11 +144,11 @@ def get_path_size(path):
         size = math.ceil(os.path.getsize(path) / 1024) * 1024
     return size
 
-def get_encrypt(filepath, encrypt='md5'):
+def get_encrypt(filepath, encrypt='sha512'):
     res = None
-    from hashlib import md5 as encrypt_func
-    if('sha512' == encrypt):
-        from hashlib import sha512 as encrypt_func
+    from hashlib import sha512 as encrypt_func
+    if('md5' == encrypt):
+        from hashlib import md5 as encrypt_func
     absfp = os.path.abspath(filepath)
     if os.path.isfile(absfp):
         m = encrypt_func()
@@ -178,7 +182,7 @@ def remote_mkdir(sftp, path):
     i = 0
     remote_path = os.sep.join(path_split[:len(path_split) - i])
     while (i < len(path_split))and (not(is_dir(sftp=sftp, path=remote_path))):
-        print(remote_path, is_dir(sftp=sftp, path=remote_path))
+#        print(remote_path, is_dir(sftp=sftp, path=remote_path))
         paths.append(remote_path)
         i = i + 1
         remote_path = os.sep.join(path_split[:len(path_split) - i])
@@ -267,6 +271,7 @@ def remote_cp(src, tgt):
         logger.debug(src + ' is copied to ' + tgt)
         res = tgt + os.sep + src_root
     except Exception as err:
+        logger.error(__name__)
         logger.error(err)
         import traceback
         logger.error(traceback.format_exc())
@@ -275,6 +280,56 @@ def remote_cp(src, tgt):
         t.close()
     return res
 
+def is_same(src, tgt):
+    src = pathize(os.path.abspath(src))
+    tgt = pathize(os.path.abspath(tgt))
+    res = True
+    if os.path.isdir(src):
+        if os.path.isdir(tgt):
+            fps = scan(src)
+            i = 0
+            while(res and (i < len(fps))):
+                fp = fps[i]
+                tail = fp.replace(src, '')
+                if('' != res):
+                    res = res and is_same(fp, tgt+tail)
+                i = i + 1
+        else:
+            res = False
+            if not res:
+                print(src, tgt)
+    else:
+        if os.path.isdir(tgt):
+            res = (get_encrypt(src) == get_encrypt(tgt + src.split(os.sep)[-1]))
+            if not res:
+                print(src, tgt)
+        else:
+            res = (get_encrypt(src) == get_encrypt(tgt))
+            if not res:
+                print(src, tgt)
+    return res
+
+def local_cp(src, tgt):
+    src = pathize(os.path.abspath(src))
+    tgt = pathize(os.path.abspath(tgt))
+    if os.path.isdir(src):
+        if os.path.isdir(tgt):
+            for fp in scan(src):
+                tgt_fp = tgt + fp.replace(src, '')
+                if os.path.isdir(fp):
+                    if not os.path.exists(tgt_fp):
+                        os.mkdir(tgt_fp)
+                local_cp(fp, tgt_fp)
+        else:
+            tgt = None
+    else:
+        if os.path.isdir(tgt):
+            tgt = tgt + src.split(os.sep)[-1]
+        else:
+            if os.path.exists(tgt):
+                os.remove(tgt)
+        tgt = shutil.copy2(src, tgt)
+    return tgt
 
 
 if ('__main__' == __name__):
@@ -292,7 +347,12 @@ if ('__main__' == __name__):
 #    print(remote_cp('guochen:12121212@10.50.180.56:10022@/home/guochen/downloads/crontab.log', os.path.abspath('.')))
 #    print(remote_cp('/home/gcd0318/downloads', 'guochen:12121212@10.50.180.56:10022@/home/guochen'))
 #    print(remote_cp('/home/gcd0318/downloads/crontab.log', 'guochen:12121212@10.50.180.56:10022@/home/guochen'))
-#    print(get_md5('tasks.py'))
+#    print(get_encrypt('tasks.py'))
 #    print(get_encrypt('d:/cn_windows_10_consumer_edition_version_1809_updated_sept_2018_x64_dvd_051b7719.iso', encrypt='sha512'))
-    print(get_encrypt('.', encrypt='sha512'))
+#    print(get_encrypt('.', encrypt='sha512'))
 #    print(get_path_size('./'), get_path_size('./cicada.log'))
+#    print(is_same('/mnt/sda1/incoming/test', '/mnt/sda1/incoming/newtest'))
+    src, tgt = '/mnt/sda1/incoming', '/mnt/sda1/backup'
+    print(local_cp(src, tgt))
+    print(is_same(src, tgt))
+    print(get_encrypt(src), get_encrypt(tgt))

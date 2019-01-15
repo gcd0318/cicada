@@ -1,9 +1,10 @@
+#!/usr/bin/python
+
 from config import DNS, DEF_PATHS, COPIES, BLANK
 from const import NodeStatus
-from utils import get_func, get_path_size, get_encrypt, scan ,deep_scan, pathize
+from utils import get_func, get_path_size, get_encrypt, scan ,deep_scan, pathize, local_cp
 from model import logger, db
 from models.filepath import FilePath
-from models.node_manager import NodeManager
 from models.node import Node
 import threading
 
@@ -24,7 +25,6 @@ def _threading_incoming_to_redis(data):
     threads = []
 
     def runner(filepath):
-        print(filepath)
         filedata = {'copy_num': 0}
         if filepath in data:
             filedata = data[filepath]
@@ -43,6 +43,7 @@ def _threading_incoming_to_redis(data):
                 target_copy = int(filepath.split(os.sep)[-2])
             except Exception as err:
                 logger.warning(err)
+                logger.warning('use default target_cpoy: ' + str(COPIES))
             finally:
                 pass
             filedata['target_copy'] = target_copy
@@ -69,40 +70,39 @@ def store_local(node, src=DEF_PATHS['INCOMING'], tgt=DEF_PATHS['BACKUP']):
     free = rs['free']
     files = rs['files']
     res = True
-    # todo: to db
-    # todo: only update modified part
-
-
     if (NodeStatus.READY == status) and accesses['BACKUP']:
         for filepath in files:
             if src in filepath:
-                tgt = pathize(tgt)
+                src = pathize(os.path.abspath(src))
+                fp = FilePath.query.filter_by(filepath=filepath).first()
                 filestat = files[filepath]
                 size = filestat['size']
                 encrypt = filestat['encrypt']
                 target_copy = filestat['target_copy']
                 copy_num = filestat['copy_num']
-                fp = FilePath(filepath=filepath, encrypt=filestat['encrypt'], node_ip=node.ip, fp_encrypt=get_encrypt(filepath))
-                db.session.add(fp)
-                db.session.commit()
-                if (size < free - BLANK) and (0 == copy_num):
-                    if os.path.isdir(filepath):
-                        tgtfp = shutil.copytree(filepath, tgt + filepath.replace(src, '').split(os.sep)[0])
+                if (fp is None) or (fp.fp_encrypt != encrypt):
+                    tgt = pathize(os.path.abspath(tgt))
+                    print(src, tgt, fp is None)
+                    if fp is None:
+                        fp = FilePath(filepath=filepath, encrypt=filestat['encrypt'], node_ip=node.ip, fp_encrypt=get_encrypt(filepath))
+                        db.session.add(fp)
                     else:
-                        tgtfp = shutil.copy2(filepath, tgt)
-                    copy_num = 1
-                    res = res and (get_encrypt(tgtfp) == encrypt)
-                rs['files'][filepath]['copy_num'] = copy_num
-            else:
-                res = False
+                        fp.fp_encrypt = encrypt
+                    if (size < free - BLANK) and (0 == copy_num):
+                        # todo: remote cp
+
+                    rs['files'][filepath]['copy_num'] = copy_num
+                    db.session.commit()
+                else:
+                    res = False
             node.manager.write_to_redis('files', rs['files'])
     return res
 
 
 if ('__main__' == __name__):
     node = Node()
-    refresh(node)
-    incoming_to_redis(node)
-    status = node.manager.read_from_redis()
-    print(status)
-    print(store_local(node))
+    while True:
+        refresh(node)
+        incoming_to_redis(node)
+        status = node.manager.read_from_redis()
+        store_local(node)
