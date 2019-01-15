@@ -42,7 +42,6 @@ class NodeManager():
         self.redis = NodeRedis()
         self.set_accesses()
         self.set_free_space()
-        print(self.ip)
 
     def are_accessible(self):
         access_ok = {}
