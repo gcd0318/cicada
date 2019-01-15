@@ -40,7 +40,8 @@ class Node():
                     status = NodeStatus.FULL
         except Exception as err:
             import traceback
-            logger.error(str(err))
+            logger.error(__name__)
+            logger.error(err)
             logger.error(traceback.format_exc())
         finally:
             self.manager.set_status(status)
