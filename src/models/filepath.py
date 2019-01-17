@@ -1,6 +1,5 @@
 from config import DEF_LEVEL
 from model import db, logger
-from utils import get_encrypt
 
 import datetime
 

@@ -4,7 +4,7 @@ from model import db, logger
 from models.node_manager import NodeManager
 from utils import get_local_ip, get_local_hostname
 
-import datetime
+import json
 
 class Node():
     def __init__(self):
@@ -12,32 +12,31 @@ class Node():
         self.ip = get_local_ip()
         self.hostname = get_local_hostname()
 
-    def to_json(self):
+    def __str__(self):
         self.refresh()
-        return {
+        res = {
             'hostname': self.hostname or self.ip,
             'ip': self.ip,
             'status': self.manager.get_status(),
             'free_space': self.manager.get_free_space(),
             'accessibles': self.manager.get_accesses()
         }
-
-    def __str__(self):
-        return str(self.to_json())
+        return json.dumps(res)
 
     def refresh(self):
         self.manager.set_free_space()
         self.manager.set_accesses()
         status = NodeStatus.NA
         try:
-            if False in self.manager.get_accesses().values():
-                status = NodeStatus.NA
-            else:
+            if not(False in self.manager.get_accesses().values()):
                 free = self.manager.get_free_space()
-                if (MIN_FREE_SPACE < free):
-                    status = NodeStatus.READY
-                elif (MIN_FREE_SPACE >= free):
-                    status = NodeStatus.FULL
+                if (MIN_FREE_SPACE < free.get('INCOMING'))and((MIN_FREE_SPACE < free.get('BACKUP'))):
+                    status = status + NodeStatus.READY
+                else:
+                    if (MIN_FREE_SPACE >= free.get('INCOMING')):
+                        status = status + NodeStatus.INCOMING_FULL
+                    if (MIN_FREE_SPACE >= free.get('BACKUP')):
+                        status = status + NodeStatus.BACKUP_FULL
         except Exception as err:
             import traceback
             logger.error(__name__)

@@ -1,4 +1,4 @@
-from config import DNS, DEF_PATHS, PERIOD_s, ENCRYPT_BLOCK
+from config import DNS, PERIOD_s, ENCRYPT_BLOCK, INCOMING
 from const import UTF8
 from model import logger
 
@@ -61,7 +61,7 @@ def pathize(filepath, force=False):
     return filepath
 
 
-def deep_scan(root=DEF_PATHS['INCOMING']):
+def deep_scan(root=INCOMING):
     resl = []
     root = os.path.abspath(root)
     if os.path.isdir(root):
@@ -75,7 +75,7 @@ def deep_scan(root=DEF_PATHS['INCOMING']):
         resl.append(root)
     return resl
 
-def deep_scan_remote(sftp, path=DEF_PATHS['INCOMING']):
+def deep_scan_remote(sftp, path=INCOMING):
     res = []
     if is_dir(path=path, sftp=sftp):
         if (not path.endswith(os.sep)):
@@ -90,7 +90,7 @@ def deep_scan_remote(sftp, path=DEF_PATHS['INCOMING']):
         res = [path]
     return res
 
-def scan(root=DEF_PATHS['INCOMING']):
+def scan(root=INCOMING):
     resl = []
     root = os.path.abspath(root)
     if os.path.isdir(root):

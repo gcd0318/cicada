@@ -1,4 +1,4 @@
-from config import CLUSTER, DEF_PATHS, TIMEOUT, HTTP_PORT, ROOT
+from config import CLUSTER, TIMEOUT, HTTP_PORT, INCOMING, BACKUP
 from utils import get_disk_usage, get_local_ip, get_path_size
 from rediscluster import StrictRedisCluster
 
@@ -46,14 +46,15 @@ class NodeManager():
 
     def are_accessible(self):
         access_ok = {}
-        for path in DEF_PATHS:
-            access_ok[path] = os.path.isdir(DEF_PATHS[path]) and os.access(DEF_PATHS[path], os.R_OK|os.W_OK)
+        access_ok['INCOMING'] = os.path.isdir(INCOMING) and os.access(INCOMING, os.R_OK | os.W_OK)
+        access_ok['BACKUP'] = os.path.isdir(BACKUP) and os.access(BACKUP, os.R_OK | os.W_OK)
         return access_ok
 
     def free_space(self):
         # todo: space in blocks, not bytes
-        total, used, free = get_disk_usage(ROOT)
-        return free
+        _, _, incoming_free = get_disk_usage(INCOMING)
+        _, _, backup_free = get_disk_usage(BACKUP)
+        return {'INCOMING': incoming_free, 'BACKUP': backup_free}
 
     def call_peers(self, timeout=TIMEOUT):
         resl = []

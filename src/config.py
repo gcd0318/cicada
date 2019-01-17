@@ -2,16 +2,8 @@ CLUSTER = ['192.168.56.101', '10.0.2.15']
 
 HTTP_PORT = 9999
 
-ROOT = '/mnt/sda1/'
-DEF_PATHS = {
-    'INCOMING': ROOT + 'incoming/',
-    'BACKUP': ROOT + 'backup/'
-}
-
-class DefaultPaths():
-    ROOT = '/mnt/sda1/'
-    INCOMING = ROOT + 'incoming/'
-    BACKUP = ROOT + 'backup/'
+INCOMING = '/mnt/sda1/incoming/'
+BACKUP = '/mnt/sda1/backup/'
 
 COPIES = 2
 BLANK = 0

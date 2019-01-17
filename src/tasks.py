@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from config import DNS, DEF_PATHS, COPIES, BLANK, CLUSTER, MIN_FREE_SPACE
+from config import DNS, INCOMING, BACKUP, COPIES, BLANK, CLUSTER, MIN_FREE_SPACE
 from const import NodeStatus
 from utils import get_func, get_path_size, get_encrypt, scan ,deep_scan, pathize, local_cp, remote_cp
 from model import logger, db
@@ -63,14 +63,14 @@ def _threading_incoming_to_redis(data):
 
 
 #@get_func
-def store(node, src=DEF_PATHS['INCOMING'], tgt=DEF_PATHS['BACKUP']):
+def store(node, src=INCOMING, tgt=BACKUP):
     rs = node.manager.read_from_redis()
     status = rs['status']
     accesses = rs['accesses']
     free = rs['free']
     files = rs['files']
     res = True
-    if (NodeStatus.READY == status) and accesses['BACKUP']:
+    if (NodeStatus.READY == status) and accesses['INCOMING']:
         for filepath in files:
             if src in filepath:
                 src = pathize(os.path.abspath(src))
@@ -99,7 +99,7 @@ def store(node, src=DEF_PATHS['INCOMING'], tgt=DEF_PATHS['BACKUP']):
                         for ip in CLUSTER:
                             node_info = node.manager.read_redis(ip)
                             if node_info is not None:
-                                new_margin = node_info.get('free') - MIN_FREE_SPACE - fp_size
+                                new_margin = node_info.get('free')['BACKUP'] - MIN_FREE_SPACE - fp_size
                                 if (0 < new_margin) and (margin < new_margin):
                                     tgt_ip = ip
                                     margin = new_margin
