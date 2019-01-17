@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from config import DNS, DEF_PATHS, COPIES, BLANK
+from config import DNS, DEF_PATHS, COPIES, BLANK, CLUSTER, MIN_FREE_SPACE
 from const import NodeStatus
 from utils import get_func, get_path_size, get_encrypt, scan ,deep_scan, pathize, local_cp, remote_cp
 from model import logger, db
@@ -63,7 +63,7 @@ def _threading_incoming_to_redis(data):
 
 
 #@get_func
-def store_local(node, src=DEF_PATHS['INCOMING'], tgt=DEF_PATHS['BACKUP']):
+def store(node, src=DEF_PATHS['INCOMING'], tgt=DEF_PATHS['BACKUP']):
     rs = node.manager.read_from_redis()
     status = rs['status']
     accesses = rs['accesses']
@@ -82,7 +82,6 @@ def store_local(node, src=DEF_PATHS['INCOMING'], tgt=DEF_PATHS['BACKUP']):
                 copy_num = filestat['copy_num']
                 if (fp is None) or (fp.fp_encrypt != encrypt):
                     tgt = pathize(os.path.abspath(tgt))
-                    print(src, tgt, fp is None)
                     if fp is None:
                         fp = FilePath(filepath=filepath, encrypt=filestat['encrypt'], node_ip=node.ip, fp_encrypt=get_encrypt(filepath))
                         db.session.add(fp)
@@ -90,7 +89,23 @@ def store_local(node, src=DEF_PATHS['INCOMING'], tgt=DEF_PATHS['BACKUP']):
                         fp.fp_encrypt = encrypt
                     if (0 == copy_num):
                         # todo: remote cp
-                        rs['files'][filepath]['copy_num'] = copy_num + 1
+                        # find a node to cp
+                        # find a path on node
+                        # remote_cp
+
+                        fp_size = get_path_size(filepath)
+                        tgt_ip = None
+                        margin = -1
+                        for ip in CLUSTER:
+                            node_info = node.manager.read_redis(ip)
+                            if node_info is not None:
+                                new_margin = node_info.get('free') - MIN_FREE_SPACE - fp_size
+                                if (0 < new_margin) and (margin < new_margin):
+                                    tgt_ip = ip
+                                    margin = new_margin
+                        if tgt_ip is not None:
+                            node.manager.redis.insert_or_update_dict('cp_task', {'from': filepath, 'to': tgt_ip})
+                        #rs['files'][filepath]['copy_num'] = copy_num + 1
                     db.session.commit()
                 else:
                     res = False
@@ -104,4 +119,4 @@ if ('__main__' == __name__):
         refresh(node)
         incoming_to_redis(node)
         status = node.manager.read_from_redis()
-#        store_local(node)
+        store(node)

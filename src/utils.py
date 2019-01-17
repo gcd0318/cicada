@@ -163,7 +163,7 @@ def get_encrypt(filepath, encrypt='sha512'):
         absfp = pathize(absfp)
         pathencrypt = encrypt_func()
         pathencrypt.update(absfp.encode(UTF8))
-        path_encrypt = 'tmp' + os.sep + pathencrypt.hexdigest()
+        path_encrypt = '/tmp' + os.sep + pathencrypt.hexdigest()
         with open(path_encrypt, 'w') as tmpf:
 #            print(absfp, path_md5, file=tmpf)
             encrypt_d = {}

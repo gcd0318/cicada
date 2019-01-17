@@ -18,6 +18,7 @@ class NodeRedis(StrictRedisCluster):
 
     def insert_or_update_dict(self, name, dic):
         if self.exists(name):
+            print(self.hgetall(name))
             for k in dic:
                 self.hset(name, k, dic[k])
         else:
@@ -64,6 +65,9 @@ class NodeManager():
                     resl.append(res.text)
         return resl
 
+    def write_redis(self, k, v):
+        pass
+
     def write_to_redis(self, k, v):
         res = self.redis.get(self.ip)
         if res is None:
@@ -74,9 +78,15 @@ class NodeManager():
             self.redis.set(self.ip, json.dumps(resd))
         return self.read_from_redis(k) == v
 
+    def read_redis(self, k):
+        res = self.redis.get(k)
+        if res is not None:
+            res = json.loads(res)
+        return res
+
     def read_from_redis(self, k=None):
         res = None
-        params = json.loads(self.redis.get(self.ip))
+        params = self.read_redis(self.ip)
         if k is None:
             res = params
         else:
