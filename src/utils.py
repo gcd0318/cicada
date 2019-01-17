@@ -332,6 +332,7 @@ def local_cp(src, tgt):
     return tgt
 
 
+
 if ('__main__' == __name__):
 #    src = ''
 #    print(scan())

@@ -1,4 +1,4 @@
-from config import CLUSTER, DEF_PATHS, TIMEOUT, HTTP_PORT
+from config import CLUSTER, DEF_PATHS, TIMEOUT, HTTP_PORT, ROOT
 from utils import get_disk_usage, get_local_ip, get_path_size
 from rediscluster import StrictRedisCluster
 
@@ -51,7 +51,7 @@ class NodeManager():
 
     def free_space(self):
         # todo: space in blocks, not bytes
-        total, used, free = get_disk_usage('/mnt/sda1')
+        total, used, free = get_disk_usage(ROOT)
         return free
 
     def call_peers(self, timeout=TIMEOUT):

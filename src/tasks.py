@@ -2,7 +2,7 @@
 
 from config import DNS, DEF_PATHS, COPIES, BLANK
 from const import NodeStatus
-from utils import get_func, get_path_size, get_encrypt, scan ,deep_scan, pathize, local_cp
+from utils import get_func, get_path_size, get_encrypt, scan ,deep_scan, pathize, local_cp, remote_cp
 from model import logger, db
 from models.filepath import FilePath
 from models.node import Node
@@ -88,10 +88,9 @@ def store_local(node, src=DEF_PATHS['INCOMING'], tgt=DEF_PATHS['BACKUP']):
                         db.session.add(fp)
                     else:
                         fp.fp_encrypt = encrypt
-                    if (size < free - BLANK) and (0 == copy_num):
+                    if (0 == copy_num):
                         # todo: remote cp
-
-                    rs['files'][filepath]['copy_num'] = copy_num
+                        rs['files'][filepath]['copy_num'] = copy_num + 1
                     db.session.commit()
                 else:
                     res = False
@@ -105,4 +104,4 @@ if ('__main__' == __name__):
         refresh(node)
         incoming_to_redis(node)
         status = node.manager.read_from_redis()
-        store_local(node)
+#        store_local(node)
