@@ -9,7 +9,6 @@ from models.node import Node
 import threading
 
 import os
-import shutil
 import time
 
 #@get_func
@@ -18,7 +17,7 @@ def refresh(node):
 
 #@get_func
 def incoming_to_redis(node):
-    data = _threading_incoming_to_redis(node.manager.read_from_redis().get('files', {}))
+    data = _threading_incoming_to_redis(node.manager.read_from_redis_str().get('files', {}))
     return node.manager.write_to_redis('files', data)
 
 def _threading_incoming_to_redis(data):
@@ -64,7 +63,7 @@ def _threading_incoming_to_redis(data):
 
 #@get_func
 def store(node, src=INCOMING, tgt=BACKUP):
-    rs = node.manager.read_from_redis()
+    rs = node.manager.read_from_redis_str()
     status = rs['status']
     accesses = rs['accesses']
     free = rs['free']
@@ -112,5 +111,5 @@ if ('__main__' == __name__):
     while True:
         refresh(node)
         incoming_to_redis(node)
-        status = node.manager.read_from_redis()
+        status = node.manager.read_from_redis_str()
         store(node)

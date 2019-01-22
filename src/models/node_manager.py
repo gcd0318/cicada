@@ -77,7 +77,7 @@ class NodeManager():
             resd = json.loads(res)
             resd[k] = v
             self.redis.set(self.ip, json.dumps(resd))
-        return self.read_from_redis(k) == v
+        return self.read_from_redis_str(k) == v
 
     def read_redis(self, k):
         res = self.redis.get(k)
@@ -85,7 +85,7 @@ class NodeManager():
             res = json.loads(res)
         return res
 
-    def read_from_redis(self, k=None):
+    def read_from_redis_str(self, k=None):
         res = None
         params = self.read_redis(self.ip)
         if k is None:
@@ -99,15 +99,15 @@ class NodeManager():
         return self.write_to_redis('free', self.free_space())
 
     def get_free_space(self):
-        return self.read_from_redis('free')
+        return self.read_from_redis_str('free')
 
     def set_accesses(self):
         return self.write_to_redis('accesses', self.are_accessible())
     def get_accesses(self):
-        return self.read_from_redis('accesses')
+        return self.read_from_redis_str('accesses')
 
     def set_status(self, status):
         return self.write_to_redis('status', status)
 
     def get_status(self):
-        return self.read_from_redis('status')
+        return self.read_from_redis_str('status')
