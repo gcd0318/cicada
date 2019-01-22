@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 WorkingDirectory=/home/gcd0318/work/cicada/src
-ExecStart=python tasks.py
+ExecStart=python store.py
 Type=simple
 
 [Install]

@@ -88,11 +88,6 @@ def store(node, src=INCOMING, tgt=BACKUP):
                     else:
                         fp.fp_encrypt = encrypt
                     if (0 == copy_num):
-                        # todo: remote cp
-                        # find a node to cp
-                        # find a path on node
-                        # remote_cp
-
                         fp_size = get_path_size(filepath)
                         tgt_ip = None
                         margin = -1
@@ -111,7 +106,6 @@ def store(node, src=INCOMING, tgt=BACKUP):
                     res = False
             node.manager.write_to_redis('files', rs['files'])
     return res
-
 
 if ('__main__' == __name__):
     node = Node()
