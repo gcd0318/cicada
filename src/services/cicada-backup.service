@@ -1,0 +1,11 @@
+[Unit]
+Description=cicada
+After=network.target
+
+[Service]
+WorkingDirectory=/home/gcd0318/work/cicada/src
+ExecStart=python backup.py
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
