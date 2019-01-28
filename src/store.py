@@ -12,10 +12,6 @@ import os
 import time
 
 #@get_func
-def refresh(node):
-    node.refresh()
-
-#@get_func
 def incoming_to_redis(node):
     data = _threading_incoming_to_redis(node.manager.read_from_redis_str().get('files', {}))
     return node.manager.write_to_redis('files', data)
@@ -109,7 +105,6 @@ def store(node, src=INCOMING, tgt=BACKUP):
 if ('__main__' == __name__):
     node = Node()
     while True:
-        refresh(node)
         incoming_to_redis(node)
         status = node.manager.read_from_redis_str()
         store(node)
