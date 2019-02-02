@@ -12,8 +12,9 @@ import os
 import time
 
 def backup(node, tgt=BACKUP):
-    res = node.manager.read_redis(k='cp_tasks')
-    print(res)
+    for task in node.manager.read_redis(k='cp_tasks'):
+        print(task)
+#        remote_cp(task['from'], task['to'])
 
 if ('__main__' == __name__):
     node = Node()
