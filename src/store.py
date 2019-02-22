@@ -98,7 +98,7 @@ def store(node, src=INCOMING, tgt=BACKUP):
                         #rs['files'][filepath]['copy_num'] = copy_num + 1
                     db.session.commit()
                 else:
-                    res = False
+                                  res = False
             node.manager.write_to_redis('files', rs['files'])
     return res
 
