@@ -37,6 +37,27 @@ class NodeRedis(StrictRedisCluster):
         return res
 
 
+class NodeDB():
+    def __init__(self, username, password, host='127.0.0.1', port=5678, client_encoding="UTF-8", dbname='cicada', dbtype='postgresql'):
+        def _connect_postgresql(dbname, username, password, host, port=5678, client_encoding=client_encoding):
+            import psycopg2
+            return psycopg2.connect(dbname=dbname, user=username, password=password, port=port, host=host, client_encoding=client_encoding)
+        def _connect_mysql(dbname, username, password, host, port=5678, client_encoding=client_encoding):
+            import mysql.connector
+            from mysql.connector import connection
+            return connection.MySQLConnection(dbname=dbname, user=username, password=password, port=port, host=host, client_encoding=client_encoding)
+
+        self.dbtype = dbtype
+        self.conn = None
+        if ('postgresql' == self.dbtype):
+            self.conn = _connect_postgresql(dbname, username, password, host, port. client_encoding)
+        elif(self.dbtype in ('mysql', 'mariadb')):
+            self.conn = _connect_mysql(dbname, username, password, host, port.client_encoding)
+
+#    def insert_or
+
+
+
 class NodeManager():
     def __init__(self):
         self.ip = get_local_ip()
