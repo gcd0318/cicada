@@ -50,9 +50,9 @@ class NodeDB():
         self.dbtype = dbtype
         self.conn = None
         if ('postgresql' == self.dbtype):
-            self.conn = _connect_postgresql(dbname, username, password, host, port. client_encoding)
+            self.conn = _connect_postgresql(dbname, username, password, host, port, client_encoding)
         elif(self.dbtype in ('mysql', 'mariadb')):
-            self.conn = _connect_mysql(dbname, username, password, host, port.client_encoding)
+            self.conn = _connect_mysql(dbname, username, password, host, port, client_encoding)
 
 #    def insert_or
 
