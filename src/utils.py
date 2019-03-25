@@ -1,5 +1,5 @@
 from config import DNS, PERIOD_s, ENCRYPT_BLOCK, INCOMING
-from const import UTF8
+from const import UTF8, TIMEOUT_s, SHORT_s, RETRY, SCRIPT_EXECUTE_TIMEOUT_s
 from model import logger
 
 import paramiko
@@ -9,6 +9,7 @@ import os
 import shutil
 import socket
 import stat
+import subprocess
 import time
 
 def timestamp(t=None, fmt='%Y%m%d_%H%M%S'):
@@ -421,13 +422,13 @@ def exec_cmd(cmd, machine='localhost', username=None, password=None, port=22, no
 
 
 def run_shell_cmd(cmd):
-    logging.info("run cmd: %s", cmd)
+    logger.info("run cmd: %s", cmd)
     try:
         rc = subprocess.call(cmd, shell=True)
         if rc != 0:
-            logging.error("Fail to run %s , rc: %s" % (cmd, rc))
+            logger.error("Fail to run %s , rc: %s" % (cmd, rc))
     except OSError as e:
-        logging.error("Fail to run cmd: %s" % e)
+        logger.error("Fail to run cmd: %s" % e)
     return rc
 
 
@@ -451,7 +452,7 @@ def exec_local_cmd(args, shell=True, with_blank=False):
     return rtcode, resl
 
 
-def run_shell_script(args, shell=False, log=logging, timeout=SCRIPT_EXECUTE_TIMEOUT_s, return_output=False):
+def run_shell_script(args, shell=False, log=logger, timeout=SCRIPT_EXECUTE_TIMEOUT_s, return_output=False):
     command = Command(args)
     return command.run(log=log, shell=shell, timeout=timeout, return_output=return_output)
 
@@ -462,7 +463,7 @@ class Command(object):
         self.process = None
         self.error_message = None
 
-    def run(self, shell=False, log=logging, timeout=SCRIPT_EXECUTE_TIMEOUT_s, return_output=False):
+    def run(self, shell=False, log=logger, timeout=SCRIPT_EXECUTE_TIMEOUT_s, return_output=False):
         try:
             def kill_process():
                 if self.process.poll() is None:
