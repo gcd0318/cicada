@@ -61,7 +61,8 @@ class NodeDB():
 class NodeManager():
     def __init__(self):
         self.ip = get_local_ip()
-        self.redis = NodeRedis()
+        print(self.ip)
+        self.redis = NodeRedis(self.ip)
         self.set_accesses()
         self.set_free_space()
 

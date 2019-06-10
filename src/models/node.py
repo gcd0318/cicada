@@ -9,14 +9,13 @@ import json
 class Node():
     def __init__(self):
         self.manager = NodeManager()
-        self.ip = get_local_ip()
         self.hostname = get_local_hostname()
 
     def __str__(self):
         self.refresh()
         res = {
-            'hostname': self.hostname or self.ip,
-            'ip': self.ip,
+            'hostname': self.hostname or self.manager.ip,
+            'ip': self.manager.ip,
             'status': self.manager.get_status(),
             'free_space': self.manager.get_free_space(),
             'accessibles': self.manager.get_accesses()
