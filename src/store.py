@@ -25,6 +25,7 @@ def _threading_incoming_to_redis(data):
             filedata = data[filepath]
         old_encrypt = filedata.get('encrypt', '')
         new_encrypt = get_encrypt(filepath)
+        print(filepath, filedata, old_encrypt, new_encrypt)
         if (old_encrypt != new_encrypt):
             while(old_encrypt != new_encrypt):
                 time.sleep(1)
@@ -33,12 +34,13 @@ def _threading_incoming_to_redis(data):
             filedata['encrypt'] = new_encrypt
             filedata['size'] = get_path_size(filepath)
 
+
             target_copy = COPIES
             try:
                 target_copy = int(filepath.split(os.sep)[-2])
             except Exception as err:
                 logger.warning(err)
-                logger.warning('use default target_cpoy: ' + str(COPIES))
+                logger.warning('use default target_copy: ' + str(COPIES))
             finally:
                 pass
             filedata['target_copy'] = target_copy
@@ -60,10 +62,10 @@ def _threading_incoming_to_redis(data):
 #@get_func
 def store(node, src=INCOMING, tgt=BACKUP):
     rs = node.manager.read_from_redis_str()
-    status = rs['status']
-    accesses = rs['accesses']
-    free = rs['free']
-    files = rs['files']
+    status = rs.get('status')
+    accesses = rs.get('accesses')
+    free = rs.get('free')
+    files = rs.get('files')
     res = True
     if (NodeStatus.READY == status) and accesses['INCOMING']:
         for filepath in files:
@@ -78,7 +80,7 @@ def store(node, src=INCOMING, tgt=BACKUP):
                 if (fp is None) or (fp.fp_encrypt != encrypt):
                     tgt = pathize(os.path.abspath(tgt))
                     if fp is None:
-                        fp = FilePath(filepath=filepath, encrypt=filestat['encrypt'], node_ip=node.ip, fp_encrypt=get_encrypt(filepath))
+                        fp = FilePath(filepath=filepath, encrypt=filestat['encrypt'], node_ip=node.manager.ip, fp_encrypt=get_encrypt(filepath))
                         db.session.add(fp)
                     else:
                         fp.fp_encrypt = encrypt
@@ -107,4 +109,5 @@ if ('__main__' == __name__):
     while True:
         incoming_to_redis(node)
         status = node.manager.read_from_redis_str()
+#        print(status)
         store(node)
