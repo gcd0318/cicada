@@ -147,6 +147,7 @@ def get_path_size(path):
         for root, dirs, files in os.walk(path):
             size = size + sum([math.ceil(os.path.getsize(os.path.join(root, name)) / 1024) * 1024 for name in files])
     elif(os.path.isfile(path)):
+        # use ceil for larger estimation
         size = math.ceil(os.path.getsize(path) / 1024) * 1024
     return size
 

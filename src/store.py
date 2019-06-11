@@ -82,29 +82,15 @@ def store(node, src=INCOMING, tgt=BACKUP):
                     print('find')
                     tgt = pathize(os.path.abspath(tgt))
                     if fp is None:
-                        print('new')
                         fp = FilePath(filepath=filepath, encrypt=filestat['encrypt'], node_ip=node.manager.ip, fp_encrypt=get_encrypt(filepath))
                         db.session.add(fp)
                     else:
-                        print('refreshing')
                         fp.fp_encrypt = encrypt
-                    if (0 == copy_num):
-                        fp_size = get_path_size(filepath)
-                        tgt_ip = None
-                        margin = -1
-                        for ip in CLUSTER:
-                            node_info = node.manager.read_redis(ip)
-                            if node_info is not None:
-                                new_margin = node_info.get('free')['BACKUP'] - MIN_FREE_SPACE - fp_size
-                                if (0 < new_margin) and (margin < new_margin):
-                                    tgt_ip = ip
-                                    margin = new_margin
-                        if tgt_ip is not None:
-                            ts = time.time
-                            node.manager.redis.insert_or_update_list('cp_tasks', ts)
-                            node.manager.redis.insert_or_update_dict(ts, {'from': filepath, 'to': tgt_ip})
-                            print(ts)
-                        rs['files'][filepath]['copy_num'] = copy_num + 1
+                    if (copy_num < target_copy):
+                        node.manager.redis.insert_or_update_dict('cp_tasks', {'filename': filepath,
+                                                                              'copy_num': copy_num,
+                                                                              'target_copy': target_copy,
+                                                                              'size': size})
                     db.session.commit()
                 else:
                     res = False
