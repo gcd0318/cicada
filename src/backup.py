@@ -12,9 +12,14 @@ import os
 import time
 
 def backup(node, tgt=BACKUP):
-    for task in (node.manager.read_redis(k='cp_tasks') or []):
+    task_ts = node.manager.redis.lpop('cp_tasks')
+    print(task_ts)
+    task = node.manager.redis.hgetall(task_ts)
+    if task is not None:
         print(task)
-#           remote_cp(task['from'], task['to'])
+        remote_cp(task['from'], task['to'])
+#        if remote_cp(task['from'], task['to']) is not None:
+#            pass
 
 if ('__main__' == __name__):
     node = Node()

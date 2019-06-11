@@ -18,7 +18,6 @@ class NodeRedis(StrictRedisCluster):
 
     def insert_or_update_dict(self, name, dic):
         if self.exists(name):
-            print(self.hgetall(name))
             for k in dic:
                 self.hset(name, k, dic[k])
         else:
@@ -35,6 +34,9 @@ class NodeRedis(StrictRedisCluster):
         for val in vals:
             res = res and (val in s_tmp)
         return res
+
+    def insert_or_update_list(self, name, val):
+        self.rpush(name, val)
 
 
 class NodeDB():
@@ -61,7 +63,6 @@ class NodeDB():
 class NodeManager():
     def __init__(self):
         self.ip = get_local_ip()
-        print(self.ip)
         self.redis = NodeRedis(self.ip)
         self.set_accesses()
         self.set_free_space()
@@ -116,6 +117,15 @@ class NodeManager():
             if params is not None:
                 res = params.get(k)
         return res
+
+    def read_from_redis_dict(self, k=None, field=None):
+        res = None
+        params = self.read_redis(self.ip)
+        if k is None:
+            res = params
+        else:
+            if field is None:
+                res = json.loads(res)
 
     def set_free_space(self):
         return self.write_to_redis('free', self.free_space())

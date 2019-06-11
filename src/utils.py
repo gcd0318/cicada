@@ -169,7 +169,10 @@ def get_encrypt(filepath, encrypt='sha512'):
         absfp = pathize(absfp)
         pathencrypt = encrypt_func()
         pathencrypt.update(absfp.encode(UTF8))
-        path_encrypt = '/tmp' + os.sep + pathencrypt.hexdigest()
+        tmp_path = os.path.abspath('tmp')
+        if not os.path.exists(tmp_path):
+            os.makedirs(tmp_path)
+        path_encrypt = tmp_path + os.sep + pathencrypt.hexdigest()
         with open(path_encrypt, 'w') as tmpf:
 #            print(absfp, path_md5, file=tmpf)
             encrypt_d = {}
@@ -178,8 +181,10 @@ def get_encrypt(filepath, encrypt='sha512'):
                     encrypt_d[filename.replace(absfp, '')] = get_encrypt(filename, encrypt=encrypt)
             for k, v in sorted(encrypt_d.items(), key=lambda item:item[0]):
                 print(k, v, file=tmpf)
+#        print(path_encrypt, os.path.exists(path_encrypt))
         res = get_encrypt(path_encrypt, encrypt=encrypt)
         os.remove(path_encrypt)
+#    print('encrypt:', res)
     return res
 
 def remote_mkdir(sftp, path):
