@@ -21,11 +21,12 @@ def backup(node, tgt=BACKUP):
 #    tasks = node.manager.read_from_redis_dict('cp_tasks', 'filename')
     encrypt = node.manager.redis.lpop('cp_tasks')
     while encrypt is not None:
-        filepath = node.manager.read_from_redis_dict(encrypt, 'filename')
+        filepath, size, copy_num, target_copy = node.manager.read_from_redis_dict(encrypt, ['filename size copy_num target_copy'])
+        print(filepath, size, copy_num, target_copy)
 #    for task in tasks:
-        size = node.manager.redis.read_from_redis_dict(encrypt, 'size')
-        copy_num = node.manager.redis.read_from_redis_dict(encrypt, 'copy_num')
-        target_copy = node.manager.redis.read_from_redis_dict(encrypt, 'target_copy')
+#        size = node.manager.redis.read_from_redis_dict(encrypt, 'size')
+#        copy_num = node.manager.redis.read_from_redis_dict(encrypt, 'copy_num')
+#        target_copy = node.manager.redis.read_from_redis_dict(encrypt, 'target_copy')
         tgt_ip = None
         margin = -1
         for ip in CLUSTER:
