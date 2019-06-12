@@ -79,7 +79,6 @@ def store(node, src=INCOMING, tgt=BACKUP):
                 copy_num = filestat['copy_num']
 #                print(fp.filepath, fp.fp_encrypt, encrypt, (fp is None), (fp.fp_encrypt != encrypt))
                 if (fp is None) or (fp.fp_encrypt != encrypt):
-                    print('find')
                     tgt = pathize(os.path.abspath(tgt))
                     if fp is None:
                         fp = FilePath(filepath=filepath, encrypt=filestat['encrypt'], node_ip=node.manager.ip, fp_encrypt=get_encrypt(filepath))
@@ -87,10 +86,12 @@ def store(node, src=INCOMING, tgt=BACKUP):
                     else:
                         fp.fp_encrypt = encrypt
                     if (copy_num < target_copy):
-                        node.manager.redis.insert_or_update_dict('cp_tasks', {'filename': filepath,
-                                                                              'copy_num': copy_num,
-                                                                              'target_copy': target_copy,
-                                                                              'size': size})
+                        node.manager.redis.insert_or_update_list('cp_tasks', filestat['encrypt'])
+                        node.manager.redis.insert_or_update_dict(filestat['encrypt'], {'filename': filepath,
+#                        node.manager.redis.insert_or_update_dict('cp_tasks', {'filename': filepath,
+                                                                                       'copy_num': copy_num,
+                                                                                       'target_copy': target_copy,
+                                                                                       'size': size})
                     db.session.commit()
                 else:
                     res = False

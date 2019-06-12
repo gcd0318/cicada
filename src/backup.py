@@ -18,17 +18,18 @@ def backup(node, tgt=BACKUP):
     free = rs.get('free')
     files = rs.get('files')
     res = True
-    tasks = node.manager.redis.lpop('cp_tasks')
-    print(tasks)
-    for task in tasks:
-        filepath = task['filepath']
-        size = task['size']
-        copy_num = task['copy_num']
-        target_copy = task['target_copy']
+#    tasks = node.manager.read_from_redis_dict('cp_tasks', 'filename')
+    encrypt = node.manager.redis.lpop('cp_tasks')
+    while encrypt is not None:
+        filepath = node.manager.read_from_redis_dict(encrypt, 'filename')
+#    for task in tasks:
+        size = node.manager.redis.read_from_redis_dict(encrypt, 'size')
+        copy_num = node.manager.redis.read_from_redis_dict(encrypt, 'copy_num')
+        target_copy = node.manager.redis.read_from_redis_dict(encrypt, 'target_copy')
         tgt_ip = None
         margin = -1
         for ip in CLUSTER:
-            node_info = node.manager.read_redis(ip)
+            node_info = node.manager.read_redis_str(ip)
             if node_info is not None:
                 new_margin = node_info.get('free')['BACKUP'] - MIN_FREE_SPACE - size
                 if (0 < new_margin) and (margin < new_margin):
@@ -41,10 +42,11 @@ def backup(node, tgt=BACKUP):
             print(ts)
 
         remote_cp(filepath, tgt_ip)
-        rs['files'][filepath]['copy_num'] = tasks[filepath] + 1
+        rs['files'][filepath]['copy_num'] = copy_num + 1
 
 #        if remote_cp(task['from'], task['to']) is not None:
 #            pass
+        encrypt = node.manager.redis.lpop('cp_tasks')
 
 if ('__main__' == __name__):
     node = Node()
