@@ -127,8 +127,8 @@ class NodeManager():
     def read_from_redis_dict(self, k=None, fields=None):
         res = None
         if k is not None and fields is not None:
-            print(self.read_redis_dict(k, fields))
-            res = json.loads(self.read_redis_dict(k, fields))
+            res = self.read_redis_dict(k, fields)
+        print(res)
         return res
 
     def set_free_space(self):
