@@ -128,7 +128,6 @@ class NodeManager():
         res = None
         if k is not None and fields is not None:
             res = self.read_redis_dict(k, fields)
-        print(res)
         return res
 
     def set_free_space(self):

@@ -22,39 +22,38 @@ def backup(node, tgt=BACKUP):
     print(encrypt)
     while encrypt is not None:
         filepath, size_str, copy_num_str, target_copy = node.manager.read_from_redis_dict(encrypt, ['filename', 'size', 'copy_num', 'target_copy'])
-#        if filepath is not None:
-        print(filepath, size_str, copy_num_str, target_copy)
-        size = int(size_str)
-        copy_num = int(copy_num_str)
-        tgt_ip = None
-        margin = -1
-        for ip in CLUSTER:
-            node_info = node.manager.read_redis_str(ip)
-            if node_info is not None:
-                print(size)
-                new_margin = node_info.get('free')['BACKUP'] - MIN_FREE_SPACE - size
-                if (0 < new_margin) and (margin < new_margin):
-                    tgt_ip = ip
-                    margin = new_margin
-        if tgt_ip is not None:
-            ts = time.time()
-            node.manager.redis.insert_or_update_list('cp_tasks', ts)
-            node.manager.redis.insert_or_update_dict(ts, {'from': filepath, 'to': tgt_ip})
-            print(ts)
+        if filepath is not None:
+            size = int(size_str)
+            copy_num = int(copy_num_str)
+            tgt_ip = None
+            margin = -1
+            for ip in CLUSTER:
+                node_info = node.manager.read_redis_str(ip)
+                if node_info is not None:
+                    print(size)
+                    new_margin = node_info.get('free')['BACKUP'] - MIN_FREE_SPACE - size
+                    if (0 < new_margin) and (margin < new_margin):
+                        tgt_ip = ip
+                        margin = new_margin
+            if tgt_ip is not None:
+                ts = time.time()
+                node.manager.redis.insert_or_update_list('cp_tasks', ts)
+                node.manager.redis.insert_or_update_dict(ts, {'from': filepath, 'to': tgt_ip})
+                print(ts)
 
-        print(remote_cp(filepath, USERNAME + ':' + PASSWORD + '@' + tgt_ip + '@' + BACKUP))
-        copy_num = copy_num + 1
-        rs['files'][filepath]['copy_num'] = copy_num
-        node.manager.write_to_redis()
-        if copy_num < target_copy:
-            node.manager.redis.insert_or_update_list('cp_tasks', encrypt)
-            node.manager.redis.insert_or_update_dict(encrypt, {'filename': filepath,
-                                                               'copy_num': copy_num,
-                                                               'target_copy': target_copy,
-                                                               'size': size})
+            print(remote_cp(filepath, USERNAME + ':' + PASSWORD + '@' + tgt_ip + '@' + BACKUP))
+            copy_num = copy_num + 1
+            rs['files'][filepath]['copy_num'] = copy_num
+    #        node.manager.write_to_redis()
+            if copy_num < int(target_copy):
+                node.manager.redis.insert_or_update_list('cp_tasks', encrypt)
+                node.manager.redis.insert_or_update_dict(encrypt, {'filename': filepath,
+                                                                   'copy_num': copy_num,
+                                                                   'target_copy': target_copy,
+                                                                   'size': size})
 
-        encrypt = node.manager.redis.lpop('cp_tasks')
-        print('encrypt', encrypt)
+            encrypt = node.manager.redis.lpop('cp_tasks')
+            print('encrypt', encrypt)
 
 if ('__main__' == __name__):
     node = Node()
