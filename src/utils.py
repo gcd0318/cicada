@@ -616,3 +616,4 @@ if ('__main__' == __name__):
     print(local_cp(src, tgt))
     print(is_same(src, tgt))
     print(get_encrypt(src), get_encrypt(tgt))
+    remote_cp(src, 'gcd0318:12121212@10.0.2.15@'+tgt)

@@ -2,7 +2,7 @@
 
 from config import DNS, INCOMING, BACKUP, COPIES, BLANK, CLUSTER, MIN_FREE_SPACE
 from const import NodeStatus
-from utils import get_func, get_path_size, get_encrypt, scan ,deep_scan, pathize, local_cp, remote_cp,timestamp
+from utils import get_func, get_path_size, get_encrypt, scan ,deep_scan, pathize
 from model import logger, db
 from models.filepath import FilePath
 from models.node import Node
