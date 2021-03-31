@@ -1,0 +1,8 @@
+[cluster]
+# max_replica =
+
+[node1]
+ip = 
+id = 
+incoming = 
+storage = 
