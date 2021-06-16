@@ -20,6 +20,6 @@ for p in (backup, storage):
         if ((s != nodename) and (not os.path.exists(tgt_path))):
             os.makedirs(tgt_path)
         else:
-            print(tgt_path, 'exists')
+            print(tgt_path, 'exists', os.path.exists(tgt_path))
 
 
