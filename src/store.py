@@ -2,8 +2,9 @@
 
 from config import DNS, INCOMING, BACKUP, COPIES, BLANK, CLUSTER, MIN_FREE_SPACE
 from const import NodeStatus
-from utils import get_func, get_path_size, get_encrypt, scan ,deep_scan, pathize
-from model import logger, db
+from gcutils.misc import get_func
+from gcutils.fileops import get_path_size, get_encrypt, scan ,deep_scan, pathize
+from run import logger, db
 from models.filepath import FilePath
 from models.node import Node
 import threading

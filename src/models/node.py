@@ -2,7 +2,7 @@ from config import MIN_FREE_SPACE, CLUSTER
 from const import NodeStatus
 from model import db, logger
 from models.node_manager import NodeManager
-from utils import get_local_ip, get_local_hostname
+from gcutils.netops import get_local_ip, get_local_hostname
 
 import json
 

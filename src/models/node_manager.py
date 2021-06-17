@@ -1,5 +1,6 @@
 from config import CLUSTER, TIMEOUT, HTTP_PORT, INCOMING, BACKUP
-from utils import get_disk_usage, get_local_ip, get_path_size
+from gcutils.fileops import get_disk_usage, get_path_size
+from gcutils.netops import get_local_ip
 from rediscluster import StrictRedisCluster
 
 import json

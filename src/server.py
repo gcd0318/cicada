@@ -1,8 +1,9 @@
 from config import HTTP_PORT
 from const import NodeStatus
-from model import app, db
+from run import app, db
 from models.node import Node
-from utils import get_local_ip, get_local_hostname
+
+from gcutils.netops import get_local_ip, get_local_hostname
 
 from flask import jsonify
 from threading import Thread
