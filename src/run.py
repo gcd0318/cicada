@@ -13,7 +13,7 @@ db = SQLAlchemy(app)
 import logging.handlers
 
 logger = logging.getLogger()
-fh = logging.handlers.TimedRotatingFileHandler('cicada.log', "D", 1, 10)
+fh = logging.handlers.TimedRotatingFileHandler('../log/cicada.log', "D", 1, 10)
 fh.setFormatter(
     logging.Formatter('%(asctime)s %(filename)s_%(lineno)d: [%(levelname)s] %(message)s', '%Y-%m-%d %H:%M:%S'))
 logger.addHandler(fh)
