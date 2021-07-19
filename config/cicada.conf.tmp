@@ -1,18 +1,23 @@
-[CLUSTER]
-NODE_NUM=3
-MAX_REPLICA=2
+[cluster]
+max_replica = 3
+nodes = node1 node2
+root = ~/cicada/data
+incoming = incoming
+storage = storage
+backup = backup
 
-ROOT=
-INCOMING=incoming
-BACKUP=backup
-STORAGE=storage
+[node1]
+ip = 
+idi =
+root = ~/cicada/data
+incoming = incoming
+storage = storage
+backup = backup
 
-[NODE1]
-ROOT=
-
-[NODE2]
-ROOT=
-
-[NODE3]
-ROOT=
-
+[node2]
+ip = 
+idi =
+root = ~/cicada/data
+incoming = incoming
+storage = storage
+backup = backup
