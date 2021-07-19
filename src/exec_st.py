@@ -1,8 +1,8 @@
-from gcutils import read_config
+from gcutils.misc import read_config
 
 import syncthing
 
-CONFFILE = 'cicada.conf'
+CONFFILE = '../config/cicada.conf'
 
 cicada = read_config(CONFFILE, allow_empty=False)
 sts = []
