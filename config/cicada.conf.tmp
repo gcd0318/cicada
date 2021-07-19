@@ -8,7 +8,7 @@ backup = backup
 
 [node1]
 ip = 
-idi =
+id =
 root = ~/cicada/data
 incoming = incoming
 storage = storage
@@ -16,7 +16,7 @@ backup = backup
 
 [node2]
 ip = 
-idi =
+id =
 root = ~/cicada/data
 incoming = incoming
 storage = storage
