@@ -1,4 +1,5 @@
-from config import HTTP_PORT
+import sys
+
 from const import NodeStatus
 from run import app, db
 from models.node import Node
@@ -34,6 +35,10 @@ def show_node(node_id):
 
 
 if ('__main__' == __name__):
+    http_port = 9999
+    if 1 < len(sys.argv):
+        http_port = sys.arv[1]
+
     for node in Node.query.all():
         node.status = NodeStatus.NA
         db.session.commit()
@@ -55,4 +60,4 @@ if ('__main__' == __name__):
     for task in tasks:
         task.start()
 
-    app.run(debug=True, use_reloader=False, host='0.0.0.0', port=HTTP_PORT)
+    app.run(debug=True, use_reloader=False, host='0.0.0.0', port=http_port)
