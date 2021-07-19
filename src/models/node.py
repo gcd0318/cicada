@@ -1,4 +1,3 @@
-from config import MIN_FREE_SPACE, CLUSTER
 from const import NodeStatus
 from model import db, logger
 from models.node_manager import NodeManager
@@ -7,9 +6,10 @@ from gcutils.netops import get_local_ip, get_local_hostname
 import json
 
 class Node():
-    def __init__(self):
+    def __init__(self, free_limit):
         self.manager = NodeManager()
         self.hostname = get_local_hostname()
+        self.free_limit = free_limit
 
     def __str__(self):
         self.refresh()
@@ -29,12 +29,12 @@ class Node():
         try:
             if not(False in self.manager.get_accesses().values()):
                 free = self.manager.get_free_space()
-                if (MIN_FREE_SPACE < free.get('INCOMING'))and((MIN_FREE_SPACE < free.get('BACKUP'))):
+                if (self.free_limit < free.get('INCOMING'))and((MIN_FREE_SPACE < free.get('BACKUP'))):
                     status = status + NodeStatus.READY
                 else:
-                    if (MIN_FREE_SPACE >= free.get('INCOMING')):
+                    if (self.free_limit >= free.get('INCOMING')):
                         status = status + NodeStatus.INCOMING_FULL
-                    if (MIN_FREE_SPACE >= free.get('BACKUP')):
+                    if (self.free_limit >= free.get('BACKUP')):
                         status = status + NodeStatus.BACKUP_FULL
         except Exception as err:
             import traceback
