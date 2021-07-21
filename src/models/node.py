@@ -1,5 +1,5 @@
 from const import NodeStatus
-from model import db, logger
+from models import db, logger
 from models.node_manager import NodeManager
 from gcutils.netops import get_local_ip, get_local_hostname
 

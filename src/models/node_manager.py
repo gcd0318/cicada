@@ -3,7 +3,7 @@ from gcutils.netops import get_local_ip
 try:
     from rediscluster import StrictRedisCluster
 except:
-    from rediscluster import StrictRedis as StrictRedisCluster
+    from redis import StrictRedis as StrictRedisCluster
 
 import json
 import os
