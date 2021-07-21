@@ -1,8 +1,9 @@
 import sys
 
 from const import NodeStatus
-from run import app, db
+from models import app, db
 from models.node import Node
+from models.cluster import Cluster
 
 from gcutils.netops import get_local_ip, get_local_hostname
 
@@ -28,7 +29,7 @@ def nodes():
 @app.route("/node/<int:node_id>", methods=['GET', 'POST'])
 def show_node(node_id):
     node_json = {}
-    nodes = Node.query.filter_by(id=node_id)
+    nodes = cluster.get_node(node_id)
     if (1 == nodes.count()):
         node_json = nodes.first().to_json()
     return jsonify(node_json)
