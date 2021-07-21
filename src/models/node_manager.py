@@ -9,6 +9,8 @@ import json
 import os
 import requests
 
+from const import TIMEOUT_s
+
 class NodeRedis(StrictRedisCluster):
     def __init__(self, host='127.0.0.1', port='7001'):
         startup_nodes = [{"host": host, "port": port}]
@@ -91,7 +93,7 @@ class NodeManager():
         _, _, backup_free = get_disk_usage(self.backup)
         return {'INCOMING': incoming_free, 'BACKUP': backup_free}
 
-    def call_peers(self, timeout=TIMEOUT):
+    def call_peers(self, timeout=TIMEOUT_s):
         resl = []
         for ip in CLUSTER:
             if (ip != self.ip):
