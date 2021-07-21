@@ -1,7 +1,9 @@
-from config import CLUSTER, TIMEOUT, HTTP_PORT, INCOMING, BACKUP
 from gcutils.fileops import get_disk_usage, get_path_size
 from gcutils.netops import get_local_ip
-from rediscluster import StrictRedisCluster
+try:
+    from rediscluster import StrictRedisCluster
+except:
+    from rediscluster import StrictRedis as StrictRedisCluster
 
 import json
 import os
@@ -62,29 +64,38 @@ class NodeDB():
 
 
 class NodeManager():
-    def __init__(self):
+    def __init__(self, conf, http_port=9999):
         self.ip = get_local_ip()
         self.redis = NodeRedis(self.ip)
         self.set_accesses()
         self.set_free_space()
+        nodes = conf['cluster']['nodes']
+        i = 0
+        while (i < len(nodes)) and (cluster[nodes[i]] != self.ip):
+            i = i + 1
+        if i < len(nodes):
+            node = nodes[i]
+            self.incoming = node['incoming']
+            self.backup = node['backup']
+
 
     def are_accessible(self):
         access_ok = {}
-        access_ok['INCOMING'] = os.path.isdir(INCOMING) and os.access(INCOMING, os.R_OK | os.W_OK)
-        access_ok['BACKUP'] = os.path.isdir(BACKUP) and os.access(BACKUP, os.R_OK | os.W_OK)
+        access_ok['INCOMING'] = os.path.isdir(self.incoming) and os.access(INCOMING, os.R_OK | os.W_OK)
+        access_ok['BACKUP'] = os.path.isdir(self.backup) and os.access(BACKUP, os.R_OK | os.W_OK)
         return access_ok
 
     def free_space(self):
         # todo: space in blocks, not bytes
-        _, _, incoming_free = get_disk_usage(INCOMING)
-        _, _, backup_free = get_disk_usage(BACKUP)
+        _, _, incoming_free = get_disk_usage(self.incoming)
+        _, _, backup_free = get_disk_usage(self.backup)
         return {'INCOMING': incoming_free, 'BACKUP': backup_free}
 
     def call_peers(self, timeout=TIMEOUT):
         resl = []
         for ip in CLUSTER:
             if (ip != self.ip):
-                api_url = 'http://' + ip + ':' + str(HTTP_PORT) + '/status'
+                api_url = 'http://' + ip + ':' + str(http_port) + '/status'
                 res = requests.get(api_url)
                 if(200 == res.status_code):
                     resl.append(res.text)
