@@ -66,6 +66,8 @@ class NodeDB():
 
 
 class NodeManager():
+#    ip = db.Column(db.String(15), unique=True)
+
     def __init__(self, conf, http_port=9999):
         self.ip = get_local_ip()
         self.redis = NodeRedis(self.ip)
