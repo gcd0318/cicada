@@ -5,17 +5,18 @@ from gcutils.fileops import makedirs
 from gcutils.misc import read_config
 from gcutils.cli import exec_cmd 
 
-def load(conffile='../config/cicada.conf'):
+def load(conffile='../config/cicada.conf', nodename=None):
+    incoming, backup, storage = None, None, None
+
     conf = read_config(conffile)
-    nodename = sys.argv[1]
-
-    node = conf[nodename]
-
     nodes = conf['cluster']['nodes'].split()
     max_replica = min(int(conf['cluster']['max_replica']), len(nodes))
 
-    incoming = os.sep.join([node['root'], node['incoming']])
-    backup = os.sep.join([node['root'], node['backup']])
-    storage = os.sep.join([node['root'], node['storage']])
+    if nodename is not None:
+        node = conf[nodename]
 
-    return incoming, backup, storage, max_replica
+        incoming = os.sep.join([node['root'], node['incoming']])
+        backup = os.sep.join([node['root'], node['backup']])
+        storage = os.sep.join([node['root'], node['storage']])
+
+    return nodes, incoming, backup, storage, max_replica
