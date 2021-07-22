@@ -5,7 +5,7 @@ from gcutils.netops import get_local_ip, get_local_hostname
 
 import json
 
-class Node():
+class Node(db.Model):
     def __init__(self, free_limit):
         self.manager = NodeManager()
         self.hostname = get_local_hostname()
