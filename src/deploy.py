@@ -5,20 +5,15 @@ from gcutils.fileops import makedirs
 from gcutils.misc import read_config
 from gcutils.cli import exec_cmd 
 
+from load_config import load
+
 def check_path(path):
     print(path, os.path.exists(os.path.realpath(os.path.expanduser(path))))
 
-conf = read_config('../config/cicada.conf')
-nodename = sys.argv[1]
+if 1 < len(sys.argv):
+    nodename = sys.argv[1]
 
-node = conf[nodename]
-
-nodes = conf['cluster']['nodes'].split()
-max_replica = min(int(conf['cluster']['max_replica']), len(nodes))
-
-incoming = os.sep.join([node['root'], node['incoming']])
-backup = os.sep.join([node['root'], node['backup']])
-storage = os.sep.join([node['root'], node['storage']])
+    nodes, incoming, backup, storage, max_replica = load('../config/cicada.conf')
 
 makedirs(incoming)
 for i in range(max_replica):
