@@ -9,6 +9,7 @@ http_port =
 
 [node1]
 ip = 
+hostname =
 id =
 root = ~/cicada/data
 incoming = incoming
@@ -18,6 +19,7 @@ http_port =
 
 [node2]
 ip = 
+hostname = 
 id =
 root = ~/cicada/data
 incoming = incoming
