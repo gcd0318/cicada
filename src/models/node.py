@@ -5,12 +5,12 @@ from gcutils.netops import get_local_ip, get_local_hostname
 
 import json
 
-#class Node(db.Model):
-#    id = db.Column(db.Integer, primary_key=True)
-#    hostname = db.Column(db.String(80), unique=True)
-#    free_limit = db.Column(db.Integer)
-#    manager = db.relationship('NodeManager', backref='manager', lazy='dynamic')
-class Node():
+class Node(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    hostname = db.Column(db.String(80), unique=True)
+    free_limit = db.Column(db.Integer)
+    manager = db.relationship('NodeManager', backref='manager', lazy='dynamic')
+#class Node():
     def __init__(self, free_limit):
         self.manager = NodeManager()
         self.hostname = get_local_hostname()

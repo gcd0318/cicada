@@ -40,3 +40,7 @@ if 1 < len(sys.argv):
             backup_ji = os.sep.join([backup, nodej + '_' +  nodei])
             makedirs(backup_ji)
             check_path(backup_ji)
+
+
+from models import db
+db.create_all()
