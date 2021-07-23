@@ -10,9 +10,15 @@ from gcutils.netops import get_local_ip, get_local_hostname
 from flask import jsonify
 from threading import Thread
 
-@app.route("/status", methods=['GET', 'POST'])
-def status():
-    return get_local_hostname()
+
+
+from gcutils.misc import read_config
+conf = read_config('../config/cicada.conf')
+nodes = conf['cluster']['nodes'].split()
+
+@app.route("/", methods=['GET', 'POST'])
+def index():
+    return conf
 #    local_ip = get_local_ip()
 #    node = Node.query.filter_by(ip=local_ip).first()
 #    return jsonify(node.to_json())
@@ -20,20 +26,26 @@ def status():
 
 @app.route("/nodes", methods=['GET', 'POST'])
 def nodes():
-    nodes = Node.query.all()
-    node_dict = {}
+    j = {}
     for node in nodes:
-        node_dict[node.id] = node.to_json()
-    return jsonify(node_dict)
+        j[node] = conf[node]['ip']
+    return j
+#    nodes = Node.query.all()
+#    node_dict = {}
+#    for node in nodes:
+#        node_dict[node.id] = node.to_json()
+#    return jsonify(node_dict)
 
 
-@app.route("/node/<int:node_id>", methods=['GET', 'POST'])
-def show_node(node_id):
-    node_json = {}
-    nodes = cluster.get_node(node_id)
-    if (1 == nodes.count()):
-        node_json = nodes.first().to_json()
-    return jsonify(node_json)
+#@app.route("/node/<int:node_id>", methods=['GET', 'POST'])
+@app.route("/node/<nodename>", methods=['GET', 'POST'])
+def show_node(nodename):
+    return conf[nodename]
+#    node_json = {}
+#    nodes = cluster.get_node(node_id)
+#    if (1 == nodes.count()):
+#        node_json = nodes.first().to_json()
+#    return jsonify(node_json)
 
 
 if ('__main__' == __name__):
