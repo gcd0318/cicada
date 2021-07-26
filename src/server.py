@@ -60,7 +60,6 @@ if ('__main__' == __name__):
         i = i + 1
     node = conf[nodes[i]]
 
-
     http_port = node.get('http_port', 9999)
     if 1 < len(sys.argv):
         http_port = sys.arv[1]
@@ -86,4 +85,4 @@ if ('__main__' == __name__):
 #    for task in tasks:
 #        task.start()
 
-    app.run(debug=True, use_reloader=False, host='0.0.0.0', port=http_port)
+    app.run(debug=True, use_reloader=True, host='0.0.0.0', port=http_port)
