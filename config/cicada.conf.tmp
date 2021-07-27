@@ -10,7 +10,7 @@ http_port =
 [node1]
 ip = 
 hostname =
-id =
+api_key =
 root = ~/cicada/data
 incoming = incoming
 storage = storage
@@ -20,7 +20,7 @@ http_port =
 [node2]
 ip = 
 hostname = 
-id =
+api_key =
 root = ~/cicada/data
 incoming = incoming
 storage = storage
