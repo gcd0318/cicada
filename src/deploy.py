@@ -41,4 +41,5 @@ if 1 < len(sys.argv):
             makedirs(backup_ji)
             check_path(backup_ji)
 
-
+from models import db
+db.create_all()

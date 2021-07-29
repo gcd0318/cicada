@@ -40,7 +40,9 @@ def nodes():
 #@app.route("/node/<int:node_id>", methods=['GET', 'POST'])
 @app.route("/node/<nodename>", methods=['GET', 'POST'])
 def show_node(nodename):
-    return conf[nodename]
+    res = conf[nodename]
+    
+    return res
 #    node_json = {}
 #    nodes = cluster.get_node(node_id)
 #    if (1 == nodes.count()):

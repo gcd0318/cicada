@@ -9,6 +9,8 @@ import json
 import os
 import requests
 
+import syncthing
+
 from const import TIMEOUT_s
 
 class NodeRedis(StrictRedisCluster):
@@ -162,3 +164,20 @@ class NodeManager():
 
     def get_status(self):
         return self.read_from_redis_str('status')
+
+    class SyncService():
+        def __init__(self, host='127.0.0.1', port=8384, api_key=None):
+            self.sync = syncthing.Syncthing(host=host, port=port, api_key=api_key)
+
+        def get_config(self, key=None):
+            conf = self.sync.config()
+            if key is not None:
+                conf = conf.get(key)
+            return conf
+
+        
+
+
+        def get_events(self, limit=100):
+            events = self.sync.events(limit=limit)
+
