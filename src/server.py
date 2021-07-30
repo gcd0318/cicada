@@ -5,16 +5,14 @@ from models import app, db
 from models.node import Node
 from models.cluster import Cluster
 
+from gcutils.misc import read_config
 from gcutils.netops import get_local_ip, get_local_hostname
 
 from flask import jsonify
 from threading import Thread
 
-
-
-from gcutils.misc import read_config
-conf = read_config('../config/cicada.conf')
-nodes = conf['cluster']['nodes'].split()
+# conf = read_config('../config/cicada.conf')
+# nodes = conf['cluster']['nodes'].split()
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
@@ -36,12 +34,10 @@ def nodes():
 #        node_dict[node.id] = node.to_json()
 #    return jsonify(node_dict)
 
-
 #@app.route("/node/<int:node_id>", methods=['GET', 'POST'])
 @app.route("/node/<nodename>", methods=['GET', 'POST'])
 def show_node(nodename):
     res = conf[nodename]
-    
     return res
 #    node_json = {}
 #    nodes = cluster.get_node(node_id)
@@ -53,7 +49,6 @@ def show_node(nodename):
 if ('__main__' == __name__):
     local_ip = get_local_ip()
 
-    from gcutils.misc import read_config
     conf = read_config('../config/cicada.conf')
     nodes = conf['cluster']['nodes'].split()
     hostname = get_local_hostname()
