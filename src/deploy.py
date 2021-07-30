@@ -6,14 +6,18 @@ from gcutils.misc import read_config
 from gcutils.cli import exec_cmd 
 
 from load_config import load
+from models import db
+from models.node import Node
+
 
 def check_path(path):
     print(path, os.path.exists(os.path.realpath(os.path.expanduser(path))))
 
+
 if 1 < len(sys.argv):
     nodename = sys.argv[1]
 
-    nodes, incoming, backup, storage, max_replica = load('../config/cicada.conf', nodename)
+    nodes, incoming, backup, storage, max_replica, free_limit = load('../config/cicada.conf', nodename)
 
     makedirs(incoming)
     for i in range(max_replica):
@@ -41,5 +45,10 @@ if 1 < len(sys.argv):
             makedirs(backup_ji)
             check_path(backup_ji)
 
-from models import db
-db.create_all()
+    db.create_all()
+    for node in nodes:
+        print(node)
+    #    node = nodes[nodename]
+        db.session.add(Node(hostname=nodename, free_limit=free_limit))
+
+    db.session.commit()
