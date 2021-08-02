@@ -47,7 +47,6 @@ if 1 < len(sys.argv):
 
     db.create_all()
     nodes = Node.query.filter(Node.hostname == nodename)
-    print(nodes, nodes.count())
     if 0 < nodes.count():
         for node in nodes:
             db.session.delete(node)
