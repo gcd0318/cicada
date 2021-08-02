@@ -3,6 +3,7 @@ import sys
 from const import NodeStatus
 from models import app, db
 from models.node import Node
+from models.node_manager import NodeManager
 from models.cluster import Cluster
 
 from gcutils.misc import read_config
@@ -40,6 +41,7 @@ def show_node(nodename):
     res = conf[nodename]
     print(nodename)
     node = Node.query.filter_by(hostname=nodename).first()
+    node.manager = NodeManager(conf)
     res['free_space'] = node.free_space()
     return res
 #    node_json = {}

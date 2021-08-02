@@ -72,12 +72,13 @@ class NodeManager():
 
     def __init__(self, conf, http_port=9999):
         self.ip = get_local_ip()
-        self.redis = NodeRedis(self.ip)
-        self.set_accesses()
-        self.set_free_space()
-        nodes = conf['cluster']['nodes']
+#        self.redis = NodeRedis(self.ip)
+#        self.set_accesses()
+#        self.set_free_space()
+        nodes = conf['cluster']['nodes'].split()
         i = 0
-        while (i < len(nodes)) and (cluster[nodes[i]] != self.ip):
+        while (i < len(nodes)) and (conf[nodes[i]]['ip'] != self.ip):
+            print(self.ip, conf[nodes[i]]['ip'])
             i = i + 1
         if i < len(nodes):
             node = nodes[i]
