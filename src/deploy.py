@@ -46,7 +46,11 @@ if 1 < len(sys.argv):
             check_path(backup_ji)
 
     db.create_all()
-    db.session.delete(Node.query.filter(Node.hostname == nodename).first())
+    nodes = Node.query.filter(Node.hostname == nodename)
+    print(nodes, nodes.count())
+    if 0 < nodes.count():
+        for node in nodes:
+            db.session.delete(node)
     db.session.commit()
     db.session.add(Node(hostname=nodename, free_limit=free_limit))
 
