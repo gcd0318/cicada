@@ -10,9 +10,10 @@ class Node(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     hostname = db.Column(db.String(80), unique=True)
     free_limit = db.Column(db.Integer)
-# class Node():
-#    def __init__(self, free_limit=1024 ** 3):
-#        self.manager = NodeManager()
+
+    def __init__(self):
+        self = super.__init__()
+        self.manager = NodeManager()
 #        self.hostname = get_local_hostname()
 #        self.free_limit = free_limit
 
@@ -51,3 +52,6 @@ class Node(db.Model):
 
     def sync_config(self, key):
         return self.manager.get_config(key)
+
+    def free_space(self):
+        return self.manager.free_space()
