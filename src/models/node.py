@@ -10,10 +10,11 @@ class Node(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     hostname = db.Column(db.String(80), unique=True)
     free_limit = db.Column(db.Integer)
+    manager = NodeManager()
 
-    def __init__(self):
-        self = super.__init__()
-        self.manager = NodeManager()
+#    def __init__(self):
+#        db.Model.__init__(self)
+#        self.manager = NodeManager()
 #        self.hostname = get_local_hostname()
 #        self.free_limit = free_limit
 
@@ -55,3 +56,7 @@ class Node(db.Model):
 
     def free_space(self):
         return self.manager.free_space()
+
+if '__main__' == __name__:
+    db.session.add(Node(hostname=nodename, free_limit=free_limit))
+    db.session.commit()
