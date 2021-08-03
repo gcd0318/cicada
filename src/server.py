@@ -1,4 +1,5 @@
 import os
+import requests
 import sys
 
 from const import NodeStatus
@@ -27,8 +28,9 @@ def index():
 @app.route("/nodes", methods=['GET', 'POST'])
 def nodes():
     j = {}
-    for node in nodes:
-        j[node] = conf[node]['ip']
+    for nodename in nodes:
+        print(nodename)
+        j[nodename] = conf[nodename]
     return j
 #    nodes = Node.query.all()
 #    node_dict = {}
@@ -39,10 +41,23 @@ def nodes():
 #@app.route("/node/<int:node_id>", methods=['GET', 'POST'])
 @app.route("/node/<nodename>", methods=['GET', 'POST'])
 def show_node(nodename):
-    res = conf[nodename]
-    node = Node.query.filter_by(hostname=nodename).first()
-    node.manager = NodeManager(conf)
-    res['free_space'] = node.free_space()
+    res = None
+    print(get_local_hostname(), nodename)
+    if (get_local_hostname() == nodename):
+        res = conf[nodename]
+        node = Node.query.filter_by(hostname=nodename).first()
+        node.manager = NodeManager(conf)
+        res['free_space'] = node.free_space()
+    else:
+        node = conf[get_local_hostname()]
+        try:
+            resp, status_code = requests.get('http://' + node['ip'] + '/node/' + nodename)
+            if 400 > status_code:
+                res = resp.text
+        except Exception as err:
+            pass
+    if res is None:
+        res = {}
     return res
 #    node_json = {}
 #    nodes = cluster.get_node(node_id)
@@ -59,11 +74,8 @@ if ('__main__' == __name__):
         if 'root' in conf[sect]:
             conf[sect]['root'] = os.path.realpath(os.path.expanduser(conf[sect]['root']))
     nodes = conf['cluster']['nodes'].split()
-    hostname = get_local_hostname()
-    i = 0
-    while (i < len(nodes)) and (hostname != conf[nodes[i]].get('hostname')):
-        i = i + 1
-    node = conf[nodes[i]]
+
+    node = conf[get_local_hostname()]
 
     http_port = node.get('http_port', 9999)
     if 1 < len(sys.argv):
