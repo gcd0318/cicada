@@ -3,6 +3,7 @@ import sys
 
 from gcutils.fileops import makedirs
 from gcutils.misc import read_config
+from gcutils.netops import get_local_hostname
 from gcutils.cli import exec_cmd 
 
 from load_config import load
@@ -14,43 +15,37 @@ def check_path(path):
     print(path, os.path.exists(os.path.realpath(os.path.expanduser(path))))
 
 
-if 1 < len(sys.argv):
-    nodename = sys.argv[1]
+nodename = get_local_hostname()
+nodes, ip, incoming, backup, storage, max_replica, free_limit = load('../config/cicada.conf', nodename)
 
-    nodes, incoming, backup, storage, max_replica, free_limit = load('../config/cicada.conf', nodename)
+makedirs(incoming)
+for i in range(max_replica):
+    replica_path = os.sep.join([incoming, str(i + 1)])
+    makedirs(replica_path)
+    check_path(replica_path)
 
-    makedirs(incoming)
-    for i in range(max_replica):
-        replica_path = os.sep.join([incoming, str(i + 1)])
-        makedirs(replica_path)
-        check_path(replica_path)
+makedirs(storage)
+check_path(storage)
 
-    makedirs(storage)
-    check_path(storage)
+for s in nodes:
+    if (s != nodename):
+        bpath = os.sep.join([backup, s])
+        makedirs(bpath)
+        check_path(bpath)
 
-    for s in nodes:
-        if (s != nodename):
-            bpath = os.sep.join([backup, s])
-            makedirs(bpath)
-            check_path(bpath)
+for i in range(len(nodes)):
+    nodei = nodes[i]
+    for j in range(i + 1, len(nodes)):
+        nodej = nodes[j]
+        storage_ij = os.sep.join([storage, nodei + '_' +  nodej])
+        makedirs(storage_ij)
+        check_path(storage_ij)
+        backup_ji = os.sep.join([backup, nodej + '_' +  nodei])
+        makedirs(backup_ji)
+        check_path(backup_ji)
 
-    for i in range(len(nodes)):
-        nodei = nodes[i]
-        for j in range(i + 1, len(nodes)):
-            nodej = nodes[j]
-            storage_ij = os.sep.join([storage, nodei + '_' +  nodej])
-            makedirs(storage_ij)
-            check_path(storage_ij)
-            backup_ji = os.sep.join([backup, nodej + '_' +  nodei])
-            makedirs(backup_ji)
-            check_path(backup_ji)
+db.drop_all()
+db.create_all()
+db.session.add(Node(hostname=nodename, free_limit=free_limit, ip=ip))
 
-    db.create_all()
-    nodes = Node.query.filter(Node.hostname == nodename)
-    if 0 < nodes.count():
-        for node in nodes:
-            db.session.delete(node)
-    db.session.commit()
-    db.session.add(Node(hostname=nodename, free_limit=free_limit))
-
-    db.session.commit()
+db.session.commit()

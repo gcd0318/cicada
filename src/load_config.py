@@ -17,6 +17,7 @@ def load(conffile='../config/cicada.conf', nodename=None):
     if nodename is not None:
         node = conf[nodename]
 
+        ip = node['ip']
         incoming = os.sep.join([node['root'], node['incoming']])
         backup = os.sep.join([node['root'], node['backup']])
         storage = os.sep.join([node['root'], node['storage']])
@@ -32,4 +33,4 @@ def load(conffile='../config/cicada.conf', nodename=None):
             free_limit = free_limit * 1024
 
 
-    return nodes, incoming, backup, storage, max_replica, free_limit
+    return nodes, ip, incoming, backup, storage, max_replica, free_limit
