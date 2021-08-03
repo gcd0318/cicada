@@ -10,7 +10,8 @@ class Node(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     hostname = db.Column(db.String(80), unique=True)
     free_limit = db.Column(db.Integer)
-    manager = None #NodeManager()
+    ip = db.Column(db.String(15), default='127.0.0.1')
+    manager = None # NodeManager()
 
 #    def __init__(self):
 #        db.Model.__init__(self)
