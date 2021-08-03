@@ -78,7 +78,6 @@ class NodeManager():
         i = 0
         while (i < len(nodes)) and (conf[nodes[i]]['ip'] != get_ip_by_if(conf[nodes[i]]['ifcmd'])):
             i = i + 1
-        
 
         self.ip, self.incoming, self.backup, self.storage = None, None, None, None
         if i < len(nodes):
@@ -98,7 +97,6 @@ class NodeManager():
 
     def free_space(self):
         # todo: space in blocks, not bytes
-        print(self.incoming)
         _, _, incoming_free = get_disk_usage(self.incoming)
         _, _, backup_free = get_disk_usage(self.backup)
         _, _, storage_free = get_disk_usage(self.storage)

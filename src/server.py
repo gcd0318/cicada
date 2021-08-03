@@ -40,7 +40,6 @@ def nodes():
 @app.route("/node/<nodename>", methods=['GET', 'POST'])
 def show_node(nodename):
     res = conf[nodename]
-    print(nodename)
     node = Node.query.filter_by(hostname=nodename).first()
     node.manager = NodeManager(conf)
     res['free_space'] = node.free_space()
