@@ -1,3 +1,4 @@
+import os
 import sys
 
 from const import NodeStatus
@@ -55,6 +56,9 @@ if ('__main__' == __name__):
     local_ip = get_local_ip()
 
     conf = read_config('../config/cicada.conf')
+    for sect in conf:
+        if 'root' in conf[sect]:
+            conf[sect]['root'] = os.path.realpath(os.path.expanduser(conf[sect]['root']))
     nodes = conf['cluster']['nodes'].split()
     hostname = get_local_hostname()
     i = 0

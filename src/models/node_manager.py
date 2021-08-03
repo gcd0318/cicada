@@ -1,5 +1,5 @@
 from gcutils.fileops import get_disk_usage, get_path_size
-from gcutils.netops import get_local_ip
+from gcutils.netops import get_ip_by_if
 try:
     from rediscluster import StrictRedisCluster
 except:
@@ -71,32 +71,38 @@ class NodeManager():
 #    ip = db.Column(db.String(15), unique=True)
 
     def __init__(self, conf, http_port=9999):
-        self.ip = get_local_ip()
+        nodes = conf['cluster']['nodes'].split()
 #        self.redis = NodeRedis(self.ip)
 #        self.set_accesses()
 #        self.set_free_space()
-        nodes = conf['cluster']['nodes'].split()
         i = 0
-        while (i < len(nodes)) and (conf[nodes[i]]['ip'] != self.ip):
-            print(self.ip, conf[nodes[i]]['ip'])
+        while (i < len(nodes)) and (conf[nodes[i]]['ip'] != get_ip_by_if(conf[nodes[i]]['ifcmd'])):
             i = i + 1
+        
+
+        self.ip, self.incoming, self.backup, self.storage = None, None, None, None
         if i < len(nodes):
-            node = nodes[i]
-            self.incoming = node['incoming']
-            self.backup = node['backup']
+            node = conf[nodes[i]]
+            self.ip = node['ip']
+            self.incoming = node['root'] + os.sep + node['incoming']
+            self.backup = node['root'] + os.sep + node['backup']
+            self.storage = node['root'] + os.sep + node['storage']
 
 
     def are_accessible(self):
         access_ok = {}
         access_ok['INCOMING'] = os.path.isdir(self.incoming) and os.access(INCOMING, os.R_OK | os.W_OK)
         access_ok['BACKUP'] = os.path.isdir(self.backup) and os.access(BACKUP, os.R_OK | os.W_OK)
+        access_ok['STORAGE'] = os.path.isdir(self.storage) and os.access(BACKUP, os.R_OK | os.W_OK)
         return access_ok
 
     def free_space(self):
         # todo: space in blocks, not bytes
+        print(self.incoming)
         _, _, incoming_free = get_disk_usage(self.incoming)
         _, _, backup_free = get_disk_usage(self.backup)
-        return {'INCOMING': incoming_free, 'BACKUP': backup_free}
+        _, _, storage_free = get_disk_usage(self.storage)
+        return {'INCOMING': incoming_free, 'BACKUP': backup_free, 'STORAGE': storage_free}
 
     def call_peers(self, timeout=TIMEOUT_s):
         resl = []
