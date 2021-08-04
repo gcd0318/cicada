@@ -42,7 +42,6 @@ def nodes():
 @app.route("/node/<nodename>", methods=['GET', 'POST'])
 def show_node(nodename):
     res = None
-    print(get_local_hostname(), nodename)
     if (get_local_hostname() == nodename):
         res = conf[nodename]
         node = Node.query.filter_by(hostname=nodename).first()
