@@ -7,10 +7,10 @@ import json
 
 class Node(db.Model):
     __tablename__ = 'nodes'
-    id = db.Column(db.Integer, primary_key=True)
+#    id = db.Column(db.Integer, primary_key=True)
     hostname = db.Column(db.String(80), unique=True)
     free_limit = db.Column(db.Integer)
-    ip = db.Column(db.String(15), default='127.0.0.1')
+    ip = db.Column(db.String(15), primary_key=True)
     manager = None # NodeManager()
 
 #    def __init__(self):
