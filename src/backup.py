@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
-from config import DNS, INCOMING, BACKUP, COPIES, BLANK, CLUSTER, MIN_FREE_SPACE, USERNAME, PASSWORD
+# from config import BLANK, CLUSTER, MIN_FREE_SPACE, USERNAME, PASSWORD
 from const import NodeStatus
-from model import logger, db
+from models import logger, db
 from models.filepath import FilePath
 from models.node import Node
+from load_config import load
 
 from gcutils.fileops import get_path_size, get_encrypt, scan ,deep_scan, pathize, local_cp
 from gcutils.misc import get_func
@@ -14,7 +15,7 @@ import os
 import threading
 import time
 
-def backup(node, tgt=BACKUP):
+def backup(node, tgt, free_limit):
     rs = node.manager.read_from_redis_str()
     status = rs.get('status')
     accesses = rs.get('accesses')
@@ -34,7 +35,7 @@ def backup(node, tgt=BACKUP):
                 node_info = node.manager.read_redis_str(ip)
                 if node_info is not None:
                     print(size)
-                    new_margin = node_info.get('free')['BACKUP'] - MIN_FREE_SPACE - size
+                    new_margin = node_info.get('free')['BACKUP'] - free_limit - size
                     if (0 < new_margin) and (margin < new_margin):
                         tgt_ip = ip
                         margin = new_margin
@@ -59,6 +60,7 @@ def backup(node, tgt=BACKUP):
             print('encrypt', encrypt)
 
 if ('__main__' == __name__):
+    nodes, ip, incoming, backup, storage, max_replica, free_limit = load('../config/cicada.conf', nodename)
     node = Node()
     while True:
-        backup(node)
+        backup(node, tgt=backup)
