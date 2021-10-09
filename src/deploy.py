@@ -16,20 +16,20 @@ def check_path(path):
 
 
 nodename = get_local_hostname()
-nodes, ip, incoming, backup, storage, max_replica, free_limit = load('../config/cicada.conf', nodename)
+nodes, ip, incoming_path, backup_path, storage_path, max_replica, free_limit = load('../config/cicada.conf', nodename)
 
-makedirs(incoming)
+makedirs(incoming_path)
 for i in range(max_replica):
-    replica_path = os.sep.join([incoming, str(i + 1)])
+    replica_path = os.sep.join([incoming_path, str(i + 1)])
     makedirs(replica_path)
     check_path(replica_path)
 
-makedirs(storage)
-check_path(storage)
+makedirs(storage_path)
+check_path(storage_path)
 
 for s in nodes:
     if (s != nodename):
-        bpath = os.sep.join([backup, s])
+        bpath = os.sep.join([backup_path, s])
         makedirs(bpath)
         check_path(bpath)
 
@@ -37,10 +37,10 @@ for i in range(len(nodes)):
     nodei = nodes[i]
     for j in range(i + 1, len(nodes)):
         nodej = nodes[j]
-        storage_ij = os.sep.join([storage, nodei + '_' +  nodej])
+        storage_ij = os.sep.join([storage_path, nodei + '_' +  nodej])
         makedirs(storage_ij)
         check_path(storage_ij)
-        backup_ji = os.sep.join([backup, nodej + '_' +  nodei])
+        backup_ji = os.sep.join([backup_path, nodej + '_' +  nodei])
         makedirs(backup_ji)
         check_path(backup_ji)
 

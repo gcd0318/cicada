@@ -9,7 +9,7 @@ from load_config import load
 
 from gcutils.fileops import get_path_size, get_encrypt, scan ,deep_scan, pathize, local_cp
 from gcutils.misc import get_func
-from gcutils.netops import remote_cp
+from gcutils.netops import get_local_hostname, remote_cp
 
 import os
 import threading
@@ -60,7 +60,7 @@ def backup(node, tgt, free_limit):
             print('encrypt', encrypt)
 
 if ('__main__' == __name__):
-    nodes, ip, incoming, backup, storage, max_replica, free_limit = load('../config/cicada.conf', nodename)
+    nodes, ip, incoming_path, backup_path, storage_path, max_replica, free_limit = load('../config/cicada.conf', get_local_hostname())
     node = Node()
     while True:
-        backup(node, tgt=backup)
+        backup(node, tgt=backup_path, free_limit=free_limit)
