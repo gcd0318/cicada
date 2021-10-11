@@ -17,7 +17,7 @@ from load_config import load
 class NodeRedis(StrictRedisCluster):
     def __init__(self, host='127.0.0.1', port='7001'):
         startup_nodes = [{"host": host, "port": port}]
-        StrictRedisCluster.__init__(self, startup_nodes=startup_nodes, decode_responses=True)
+#        StrictRedisCluster.__init__(self, startup_nodes=startup_nodes, decode_responses=True)
 
     def insert_or_update_str(self, name, val):
         self.set(name, val)
@@ -86,9 +86,12 @@ class NodeManager():
             self.backup_path = node['root'] + os.sep + node['backup_path']
             self.storage_path = node['root'] + os.sep + node['storage_path']
 
-        self.redis = NodeRedis(self.ip)
-        self.set_accesses()
-        self.set_free_space()
+#        self.redis = NodeRedis(self.ip)
+#        self.set_accesses()
+#        self.set_free_space()
+
+    def get_all(self):
+        pass
 
     def are_accessible(self):
         access_ok = {}
@@ -99,10 +102,10 @@ class NodeManager():
 
     def free_space(self):
         # todo: space in blocks, not bytes
-        _, _, incoming_path_free = get_disk_usage(self.incoming_path)
-        _, _, backup_path_free = get_disk_usage(self.backup_path)
-        _, _, storage_path_free = get_disk_usage(self.storage_path)
-        return {'INCOMING': incoming_path_free, 'BACKUP': backup_path_free, 'STORAGE': storage_path_free}
+        _, _, incoming_free = None # get_disk_usage(self.incoming_path)
+        _, _, backup_free = None # get_disk_usage(self.backup_path)
+        _, _, storage_free = None # get_disk_usage(self.storage_path)
+        return {'INCOMING': incoming_free, 'BACKUP': backup_free, 'STORAGE': storage_free}
 
     def call_peers(self, timeout=TIMEOUT_s):
         resl = []

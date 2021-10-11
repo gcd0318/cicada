@@ -16,7 +16,7 @@ import threading
 import time
 
 def backup(node, tgt, free_limit):
-    rs = node.manager.read_from_redis_str()
+    rs = node.manager.get_all()
     status = rs.get('status')
     accesses = rs.get('accesses')
     free = rs.get('free')
