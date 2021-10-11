@@ -14,6 +14,7 @@ def load(conffile='../config/cicada.conf', nodename=None):
     max_replica = min(int(conf['cluster']['max_replica']), len(nodes))
 
     if nodename is None:
+        res['nodes'] = nodes
         for nname in nodes:
             node = conf[nname]
             tmp = {}

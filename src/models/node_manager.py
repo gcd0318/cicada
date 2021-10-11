@@ -12,6 +12,7 @@ import requests
 import syncthing
 
 from const import TIMEOUT_s
+from load_config import load
 
 class NodeRedis(StrictRedisCluster):
     def __init__(self, host='127.0.0.1', port='7001'):
@@ -70,37 +71,38 @@ class NodeDB():
 class NodeManager():
 #    ip = db.Column(db.String(15), unique=True)
 
-    def __init__(self, conf, http_port=9999):
-        nodes = conf['cluster']['nodes'].split()
-#        self.redis = NodeRedis(self.ip)
-#        self.set_accesses()
-#        self.set_free_space()
+    def __init__(self, http_port=9999):
+        conf = load()
+        nodes = conf['nodes']
         i = 0
         while (i < len(nodes)) and (conf[nodes[i]]['ip'] != get_ip_by_if(conf[nodes[i]]['ifcmd'])):
             i = i + 1
 
-        self.ip, self.incoming, self.backup, self.storage = None, None, None, None
+        self.ip, self.incoming_path, self.backup_path, self.storage_path = None, None, None, None
         if i < len(nodes):
             node = conf[nodes[i]]
             self.ip = node['ip']
-            self.incoming = node['root'] + os.sep + node['incoming']
-            self.backup = node['root'] + os.sep + node['backup']
-            self.storage = node['root'] + os.sep + node['storage']
+            self.incoming_path = node['root'] + os.sep + node['incoming_path']
+            self.backup_path = node['root'] + os.sep + node['backup_path']
+            self.storage_path = node['root'] + os.sep + node['storage_path']
 
+        self.redis = NodeRedis(self.ip)
+        self.set_accesses()
+        self.set_free_space()
 
     def are_accessible(self):
         access_ok = {}
-        access_ok['INCOMING'] = os.path.isdir(self.incoming) and os.access(INCOMING, os.R_OK | os.W_OK)
-        access_ok['BACKUP'] = os.path.isdir(self.backup) and os.access(BACKUP, os.R_OK | os.W_OK)
-        access_ok['STORAGE'] = os.path.isdir(self.storage) and os.access(BACKUP, os.R_OK | os.W_OK)
+        access_ok['INCOMING'] = os.path.isdir(self.incoming_path) and os.access(INCOMING, os.R_OK | os.W_OK)
+        access_ok['BACKUP'] = os.path.isdir(self.backup_path) and os.access(BACKUP, os.R_OK | os.W_OK)
+        access_ok['STORAGE'] = os.path.isdir(self.storage_path) and os.access(BACKUP, os.R_OK | os.W_OK)
         return access_ok
 
     def free_space(self):
         # todo: space in blocks, not bytes
-        _, _, incoming_free = get_disk_usage(self.incoming)
-        _, _, backup_free = get_disk_usage(self.backup)
-        _, _, storage_free = get_disk_usage(self.storage)
-        return {'INCOMING': incoming_free, 'BACKUP': backup_free, 'STORAGE': storage_free}
+        _, _, incoming_path_free = get_disk_usage(self.incoming_path)
+        _, _, backup_path_free = get_disk_usage(self.backup_path)
+        _, _, storage_path_free = get_disk_usage(self.storage_path)
+        return {'INCOMING': incoming_path_free, 'BACKUP': backup_path_free, 'STORAGE': storage_path_free}
 
     def call_peers(self, timeout=TIMEOUT_s):
         resl = []

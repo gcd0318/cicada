@@ -2,7 +2,6 @@ import os
 import sys
 
 from gcutils.fileops import makedirs
-from gcutils.misc import read_config
 from gcutils.netops import get_local_hostname
 from gcutils.cli import exec_cmd 
 
@@ -16,7 +15,14 @@ def check_path(path):
 
 
 nodename = get_local_hostname()
-nodes, ip, incoming_path, backup_path, storage_path, max_replica, free_limit = load('../config/cicada.conf', nodename)
+conf = load('../config/cicada.conf', nodename)
+nodes = conf['nodes']
+ip = conf['ip']
+incoming_path = conf['incoming_path']
+backup_path = conf['backup_path']
+storage_path = conf['storage_path']
+max_replica = conf['max_replica']
+free_limit = conf['free_limit']
 
 makedirs(incoming_path)
 for i in range(max_replica):

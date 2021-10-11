@@ -60,7 +60,16 @@ def backup(node, tgt, free_limit):
             print('encrypt', encrypt)
 
 if ('__main__' == __name__):
-    nodes, ip, incoming_path, backup_path, storage_path, max_replica, free_limit = load('../config/cicada.conf', get_local_hostname())
+    nodename = get_local_hostname()
+    conf = load('../config/cicada.conf', nodename)
+    nodes = conf['nodes']
+    ip = conf['ip']
+    incoming_path = conf['incoming_path']
+    backup_path = conf['backup_path']
+    storage_path = conf['storage_path']
+    max_replica = conf['max_replica']
+    free_limit = conf['free_limit']
+
     node = Node()
     while True:
         backup(node, tgt=backup_path, free_limit=free_limit)
