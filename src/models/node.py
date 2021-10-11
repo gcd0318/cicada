@@ -11,7 +11,7 @@ class Node(db.Model):
     hostname = db.Column(db.String(80), unique=True)
     free_limit = db.Column(db.Integer)
     ip = db.Column(db.String(15), primary_key=True)
-    manager = None # NodeManager()
+    manager = NodeManager()
 
 #    def __init__(self):
 #        db.Model.__init__(self)
