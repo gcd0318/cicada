@@ -51,8 +51,11 @@ for i in range(len(nodes)):
         check_path(backup_ji)
 
 
-db.drop_all()
-db.create_all()
-db.session.add(Node(hostname=nodename, free_limit=free_limit, ip=ip))
 
-db.session.commit()
+
+
+# db.drop_all()
+# db.create_all()
+# db.session.add(Node(hostname=nodename, free_limit=free_limit, ip=ip))
+
+# db.session.commit()
