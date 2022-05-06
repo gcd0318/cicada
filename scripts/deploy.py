@@ -17,7 +17,8 @@ def check_path(path):
 nodename = get_local_hostname()
 conf = load('../config/cicada.conf', nodename)
 nodes = conf['nodes']
-ip = conf['ip']
+cmdip = conf['cmdip']
+dataip = conf['dataip']
 incoming_path = conf['incoming_path']
 backup_path = conf['backup_path']
 storage_path = conf['storage_path']
